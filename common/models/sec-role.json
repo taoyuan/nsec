@@ -1,0 +1,35 @@
+{
+  "name": "SecRole",
+  "properties": {
+	"id": {
+	  "type": "string",
+	  "id": true,
+	  "generated": false
+	},
+	"name": {
+	  "type": "string",
+	  "required": true
+	},
+	"description": "string",
+	"scope": {
+	  "type": "string",
+	  "index": true
+	}
+  },
+  "relations": {
+	"inherits": {
+	  "type": "referencesMany",
+	  "model": "SecRole",
+	  "foreignKey": "parentIds",
+	  "options": {
+		"validate": true,
+		"forceId": false
+	  }
+	},
+	"mappings": {
+	  "type": "hasMany",
+	  "model": "SecRoleMapping",
+	  "foreignKey": "roleId"
+	}
+  }
+}

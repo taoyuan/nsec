@@ -1,0 +1,73 @@
+{
+  "name": "nsec",
+  "version": "0.1.0",
+  "description": "A security library for nodejs with roles management and access control",
+  "main": "./index.js",
+  "jsnext:main": "./index.js",
+  "engines": {
+    "node": ">=6"
+  },
+  "scripts": {
+    "lint": "eslint src test",
+    "test": "npm run lint && nyc mocha test/**/*.test.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taoyuan/nsec"
+  },
+  "keywords": [
+    "canable",
+    "loopback",
+    "permission",
+    "action",
+    "acl",
+    "can",
+    "cancan"
+  ],
+  "author": {
+    "name": "Yuan Tao",
+    "email": "towyuan@outlook.com",
+    "website": ""
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/taoyuan/nsec/issues"
+  },
+  "homepage": "https://github.com/taoyuan/nsec#readme",
+  "dependencies": {
+    "arrify": "^1.0.1",
+    "bluebird": "^3.4.6",
+    "hoek": "^4.1.0",
+    "joi": "^10.0.5",
+    "lodash": "^4.17.2",
+    "shortid": "^2.2.6"
+  },
+  "optionalDependencies": {
+    "loopback-datasource-juggler": "^2.53.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.15",
+    "eslint": "^3.12.2",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-mocha": "^4.7.0",
+    "eslint-plugin-react": "^6.8.0",
+    "mocha": "^3.2.0",
+    "nyc": "^10.0.0",
+    "sinon": "^1.17.6",
+    "sinon-chai": "^2.8.0",
+    "chai-as-promised": "^6.0.0",
+    "loopback-connector-mongodb": "^1.17.0",
+    "needs": "^1.0.3",
+    "xo": "^0.17.1"
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  }
+}
