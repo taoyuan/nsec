@@ -8,7 +8,7 @@ module.exports = function (Model, opts) {
 	const connector = Model.getDataSource().connector;
 	const securer = securers.getSecurer(connector.name);
 	if (!securer) {
-		throw new Error('Unsupported connector: ' + connector.name);
+		throw new Error('nsec model find secure only support mongodb currently. current connector is: ' + connector.name);
 	}
 	if (Model.__nsec_secured__) {
 		return;

@@ -9,7 +9,7 @@ const utils = require('./utils');
 
 const DEFAULT_PERMISSIONS_PROPERTY = '_permissions';
 
-class Security {
+class Acl {
 
 	/**
 	 * Security constructor
@@ -32,7 +32,7 @@ class Security {
 			opts = ds;
 			ds = undefined;
 		}
-		opts = Object.assign({ds}, opts);
+		opts = _.defaults({ds}, opts);
 		opts.dirty = opts.dirty !== false;
 		opts.property = opts.property || DEFAULT_PERMISSIONS_PROPERTY;
 
@@ -59,7 +59,7 @@ class Security {
 	/**
 	 *
 	 * @param {*} [scope]
-	 * @return {Security}
+	 * @return {Acl}
 	 */
 	scoped(scope) {
 		if (scope === '*') {
@@ -70,7 +70,7 @@ class Security {
 			scope = null;
 		}
 
-		return new Security(Object.assign({}, this._opts, {models: this._models, scope}));
+		return new Acl(Object.assign({}, this._opts, {models: this._models, scope}));
 	}
 
 	// ------------------------
@@ -144,4 +144,4 @@ class Security {
 	/* eslint-enable */
 }
 
-module.exports = Security;
+module.exports = Acl;

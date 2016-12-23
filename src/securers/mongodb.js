@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const _ = require('lodash');
+const PromiseA = require('bluebird');
 const arrify = require('arrify');
 const util = require('util');
 const utils = require('../utils');
@@ -11,7 +12,9 @@ const COMMAND = ['find', 'findOne', 'findAndModify', 'count'];
 
 module.exports = function (Model, opts) {
 	const modelName = Model.modelName;
-	const {dirty, property, getCurrentSubjects} = opts;
+	let {admin, dirty, property, getCurrentSubjects} = opts;
+
+	admin = admin || '$admin';
 
 	assert(dirty, 'MongoDB securer only support dirty mode');
 	assert(property, '"property" is required');
@@ -27,7 +30,7 @@ module.exports = function (Model, opts) {
 	// Hide permissions property
 	utils.hideProperty(Model, property);
 
-	return function (ctx) {
+	return function (ctx, next) {
 		// ctx:
 		// 	{
 		//	 	model: model,
@@ -39,24 +42,27 @@ module.exports = function (Model, opts) {
 		// 	};
 		const {req} = ctx;
 		if (ctx.model !== modelName || !COMMAND.includes(req.command) || !property) {
+			next();
 			return;
 		}
 
-		const subjects = arrify(getCurrentSubjects());
-		if (_.isEmpty(subjects)) {
-			return;
-		}
+		PromiseA.resolve(getCurrentSubjects()).then(subjects => {
+			subjects = arrify(subjects);
+			if (subjects.includes(admin)) {
+				return;
+			}
 
-		req.params[0] = {
-			$and: [
-				req.params[0],
-				{
-					$or: [
-						{[property]: null},
-						{[property]: {$size: 0}},
-						{[property]: {$elemMatch: {subject: {$in: subjects}, actions: 'read'}}}
-					]
-				}]
-		};
+			req.params[0] = {
+				$and: [
+					req.params[0],
+					{
+						$or: [
+							{[property]: null},
+							{[property]: {$size: 0}},
+							{[property]: {$elemMatch: {subject: {$in: subjects}, actions: 'read'}}}
+						]
+					}]
+			};
+		}).nodeify(next);
 	};
 };

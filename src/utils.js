@@ -17,11 +17,11 @@ function hideProperty(Model, property) {
 
 exports.identify = identify;
 function identify(target, separator = ':') {
-	if (_.isObject(target) && target.id) {
-		if (target.constructor.modelName) {
-			return target.constructor.modelName + separator + target.id;
-		}
-		return _.get(target, 'id');
+	const {type, id} = typeid(target);
+	if (type && id) {
+		return type + separator + id;
+	} else if (type || id) {
+		return type || id;
 	}
 	if (target && target.toString() === '[object Object]') {
 		throw new Error('Unsupported target to identify: ' + JSON.stringify(target));
@@ -40,14 +40,13 @@ function typeid(entity) {
 		if (entity.id && entity.constructor.modelName) {
 			type = entity.constructor.modelName;
 			id = entity.id;
-		} else if (entity.type && entity.id) {
-			type = entity.type;
-			id = entity.id;
+		} else if (entity.id || entity.type) {
+			return entity;
 		}
 	}
 
-	if (!type) {
-		throw new Error('Invalid entity: ' + JSON.stringify(entity));
+	if (!type && !id) {
+		throw new Error('[typeid] Invalid entity: ' + JSON.stringify(entity));
 	}
 
 	return {type, id};

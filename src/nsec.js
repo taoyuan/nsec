@@ -1,13 +1,18 @@
 'use strict';
 
-const Security = require('./security');
+const Acl = require('./acl');
+const utils = require('./utils');
 
-const nsec = module.exports = createSecurity;
+const nsec = module.exports = createAcl;
 
 nsec.version = require('../package.json').version;
 
-function createSecurity(ds, options) {
+function createAcl(ds, options) {
 	options = options || {};
 	options.scope = options.scope || null;
-	return new Security(ds, options);
+	return new Acl(ds, options);
 }
+
+nsec.identify = function (target, separator) {
+	return utils.identify(target, separator);
+};

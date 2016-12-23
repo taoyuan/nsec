@@ -6,23 +6,23 @@ const Promise = require('bluebird');
 const nsec = require('../');
 const s = require('./support');
 
-describe('sec/roles', () => {
-	const sec = nsec(s.ds);
+describe('acl/roles', () => {
+	const acl = nsec(s.ds);
 
 	beforeEach(() => s.setup());
 	afterEach(() => s.teardown());
 
 	function addRoles() {
 		return Promise.all([
-			sec.addRole({scope: null, name: 'member'}),
-			sec.addRole({scope: 'org:1', name: 'member'}),
-			sec.addRole({scope: 'team:1', name: 'member'})
+			acl.addRole({scope: null, name: 'member'}),
+			acl.addRole({scope: 'org:1', name: 'member'}),
+			acl.addRole({scope: 'team:1', name: 'member'})
 		]);
 	}
 
 	it('should find roles', () => {
 		return addRoles().then(([role]) => {
-			return sec.findRoles({where: {scope: null}}).then(roles => {
+			return acl.findRoles({where: {scope: null}}).then(roles => {
 				assert.equal(roles.length, 1);
 				assert.deepEqual(roles[0].toObject(), role.toObject());
 			});
@@ -31,52 +31,52 @@ describe('sec/roles', () => {
 
 	it('should remove role', () => {
 		return addRoles()
-			.then(() => sec.scoped('*').countRoles({name: 'member'}))
+			.then(() => acl.scoped('*').countRoles({name: 'member'}))
 			.then(count => assert.equal(count, 3))
 
-			.then(() => sec.countRoles({scope: null, name: 'member'}))
+			.then(() => acl.countRoles({scope: null, name: 'member'}))
 			.then(count => assert.equal(count, 1))
-			.then(() => sec.countRoles({scope: 'org:1', name: 'member'}))
+			.then(() => acl.countRoles({scope: 'org:1', name: 'member'}))
 			.then(count => assert.equal(count, 1))
-			.then(() => sec.countRoles({scope: 'team:1', name: 'member'}))
+			.then(() => acl.countRoles({scope: 'team:1', name: 'member'}))
 			.then(count => assert.equal(count, 1))
 
-			.then(() => sec.removeRoles({scope: null, name: 'member'}))
-			.then(() => sec.countRoles({scope: null, name: 'member'}))
+			.then(() => acl.removeRoles({scope: null, name: 'member'}))
+			.then(() => acl.countRoles({scope: null, name: 'member'}))
 			.then(count => assert.equal(count, 0))
 
-			.then(() => sec.removeRoles({scope: 'org:1', name: 'member'}))
-			.then(() => sec.countRoles({scope: 'org:1', name: 'member'}))
+			.then(() => acl.removeRoles({scope: 'org:1', name: 'member'}))
+			.then(() => acl.countRoles({scope: 'org:1', name: 'member'}))
 			.then(count => assert.equal(count, 0))
 
-			.then(() => sec.removeRoles({scope: 'team:1', name: 'member'}))
-			.then(() => sec.countRoles({scope: 'team:1', name: 'member'}))
+			.then(() => acl.removeRoles({scope: 'team:1', name: 'member'}))
+			.then(() => acl.countRoles({scope: 'team:1', name: 'member'}))
 			.then(count => assert.equal(count, 0))
 
-			.then(() => sec.countRoles({name: 'member'}))
+			.then(() => acl.countRoles({name: 'member'}))
 			.then(count => assert.equal(count, 0));
 	});
 
 	it('should inherits from parents', () => {
-		const scoped = sec.scoped();
+		const scoped = acl.scoped();
 		return Promise.all([
 			scoped.addRole('member'),
 			scoped.addRole('leader'),
 			scoped.addRole('admin')
 		]).then(([member, leader, admin]) => {
-			return sec.inheritRoleFrom(admin, member)
+			return acl.inheritRoleFrom(admin, member)
 				.then(role => {
 					assert.sameMembers(role.parentIds, [member.id]);
 				})
-				.then(() => sec.inheritRoleFrom(admin, leader))
+				.then(() => acl.inheritRoleFrom(admin, leader))
 				.then(role => {
 					assert.sameMembers(role.parentIds, [member.id, leader.id]);
 				})
-				.then(() => sec.uninheritRoleFrom(admin, member))
+				.then(() => acl.uninheritRoleFrom(admin, member))
 				.then(role => {
 					assert.sameMembers(role.parentIds, [leader.id]);
 				})
-				.then(() => sec.setRoleInherits(admin, [admin, member, leader]))
+				.then(() => acl.setRoleInherits(admin, [admin, member, leader]))
 				.then(role => {
 					assert.sameMembers(role.parentIds, [member.id, leader.id]);
 				});
@@ -84,23 +84,23 @@ describe('sec/roles', () => {
 	});
 
 	it('should get roles parents', () => {
-		return createInheritedRoles(sec.scoped()).then(([A, B, C, D, ABC, BCD]) => {
-			return sec.getParentRoles([ABC, BCD]).then(parents => {
+		return createInheritedRoles(acl.scoped()).then(([A, B, C, D, ABC, BCD]) => {
+			return acl.getParentRoles([ABC, BCD]).then(parents => {
 				assert.sameDeepMembers(parents.map(p => p.name), ['A', 'B', 'C', 'D']);
 			});
 		});
 	});
 
 	it('should recurse parents ', () => {
-		return createInheritedRoles(sec.scoped()).then(([A, B, C, D, ABC, BCD, ABCD]) => {
-			return sec.recurseParentRoleIds(ABCD).then(parentIds => {
+		return createInheritedRoles(acl.scoped()).then(([A, B, C, D, ABC, BCD, ABCD]) => {
+			return acl.recurseParentRoleIds(ABCD).then(parentIds => {
 				assert.sameDeepMembers(parentIds, [A, B, C, D, ABC, BCD].map(r => r.id));
 			});
 		});
 	});
 
 	it('should assign user roles', () => {
-		const scoped = sec.scoped('123');
+		const scoped = acl.scoped('123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
 				assert.lengthOf(mappings, 3);
@@ -114,12 +114,12 @@ describe('sec/roles', () => {
 	});
 
 	it('should unassign user roles', () => {
-		const scoped = sec.scoped('123');
+		const scoped = acl.scoped('123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(() => {
 				return scoped.unassignRolesUsers(A, 'Tom').then(info => {
 					assert.deepEqual(info, {count: 1});
-					return sec.models.SecRoleMapping.find().then(mappings => {
+					return acl.models.SecRoleMapping.find().then(mappings => {
 						assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
 							{roleId: B.id, scope: '123', userId: 'Tom'},
 							{roleId: C.id, scope: '123', userId: 'Tom'}
@@ -131,8 +131,8 @@ describe('sec/roles', () => {
 	});
 
 	it('should find roles by users', () => {
-		const X = sec.scoped('X');
-		const Y = sec.scoped('Y');
+		const X = acl.scoped('X');
+		const Y = acl.scoped('Y');
 		return Promise.all([
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
@@ -154,8 +154,8 @@ describe('sec/roles', () => {
 	});
 
 	it('should find roles recursively by users', () => {
-		const X = sec.scoped('X');
-		const Y = sec.scoped('Y');
+		const X = acl.scoped('X');
+		const Y = acl.scoped('Y');
 		return Promise.all([
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
@@ -178,8 +178,8 @@ describe('sec/roles', () => {
 	});
 
 	it('should find users by roles', () => {
-		const X = sec.scoped('X');
-		const Y = sec.scoped('Y');
+		const X = acl.scoped('X');
+		const Y = acl.scoped('Y');
 		return Promise.all([
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
@@ -201,8 +201,8 @@ describe('sec/roles', () => {
 	});
 
 	it('should has roles with role id', () => {
-		const X = sec.scoped('X');
-		const Y = sec.scoped('Y');
+		const X = acl.scoped('X');
+		const Y = acl.scoped('Y');
 		return Promise.all([
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
@@ -226,8 +226,8 @@ describe('sec/roles', () => {
 	});
 
 	it('should has roles with role name', () => {
-		const X = sec.scoped('X');
-		const Y = sec.scoped('Y');
+		const X = acl.scoped('X');
+		const Y = acl.scoped('Y');
 		return Promise.all([
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
@@ -251,22 +251,22 @@ describe('sec/roles', () => {
 	});
 });
 
-function createInheritedRoles(sec) {
-	if (!sec.isScoped) throw new Error('require scoped roles');
+function createInheritedRoles(acl) {
+	if (!acl.isScoped) throw new Error('require scoped roles');
 	return Promise.all([
-		sec.addRole('A'),
-		sec.addRole('B'),
-		sec.addRole('C'),
-		sec.addRole('D'),
-		sec.addRole('ABC'),
-		sec.addRole('BCD'),
-		sec.addRole('ABCD')
+		acl.addRole('A'),
+		acl.addRole('B'),
+		acl.addRole('C'),
+		acl.addRole('D'),
+		acl.addRole('ABC'),
+		acl.addRole('BCD'),
+		acl.addRole('ABCD')
 	]).then(roles => {
 		const [A, B, C, D, ABC, BCD, ABCD] = roles;
 		return Promise.all([
-			sec.inheritRoleFrom(ABC, [A, B, C]),
-			sec.inheritRoleFrom(BCD, [B, C, D]),
-			sec.inheritRoleFrom(ABCD, [ABC, BCD])
+			acl.inheritRoleFrom(ABC, [A, B, C]),
+			acl.inheritRoleFrom(BCD, [B, C, D]),
+			acl.inheritRoleFrom(ABCD, [ABC, BCD])
 		]).thenReturn(roles);
 	});
 }

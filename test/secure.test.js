@@ -3,7 +3,7 @@
 /* global describe,it,beforeEach,afterEach */
 const assert = require('chai').assert;
 const PromiseA = require('bluebird');
-const Canable = require('..');
+const nsec = require('..');
 
 const s = require('./support');
 
@@ -14,13 +14,13 @@ describe('secure', () => {
 	afterEach(() => s.teardown());
 
 	it('should secure model find', () => {
-		const canable = new Canable({ds: s.ds, getCurrentSubjects: () => 'tom'});
-		canable.secure(Store);
+		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
+		acl.secure(Store);
 		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(([storeA, storeB, storeC]) => {
 			return PromiseA.resolve()
-				.then(() => canable.allow('jerry', storeA, ['read', 'manage']))
-				.then(() => canable.allow('tom', storeB, ['read']))
-				.then(() => canable.allow(['tom', 'jerry'], storeC, ['read']));
+				.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+				.then(() => acl.allow('tom', storeB, ['read']))
+				.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
 		}).then(() => {
 			return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(stores => {
 				assert.lengthOf(stores, 2);

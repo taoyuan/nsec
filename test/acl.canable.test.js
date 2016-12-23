@@ -6,7 +6,7 @@ const nsec = require('..');
 
 const s = require('./support');
 
-describe('sec/canable', () => {
+describe('acl/canable', () => {
 	describe('with dirty', () => {
 		itCanable(true);
 	});
@@ -17,7 +17,7 @@ describe('sec/canable', () => {
 });
 
 function itCanable(dirty) {
-	let sec;
+	let acl;
 	let product;
 	let tom;
 	let jerry;
@@ -34,28 +34,28 @@ function itCanable(dirty) {
 	});
 
 	beforeEach(() => {
-		sec = nsec(s.ds, {dirty});
+		acl = nsec(s.ds, {dirty});
 		return s.Product.create().then(p => product = p);
 	});
 
 	afterEach(() => s.teardown());
 
 	it('should allow single action', () => {
-		return sec.allow(tom, product, 'read').then(p => {
+		return acl.allow(tom, product, 'read').then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [{subject: 'User:' + tom.id, actions: ['read']}]);
 		});
 	});
 
 	it('should allow multiple actions', () => {
-		return sec.allow('tom', product, ['read', 'destroy']).then(p => {
+		return acl.allow('tom', product, ['read', 'destroy']).then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['read', 'destroy']}]);
 		});
 	});
 
 	it('should allow multiple subjects', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(p => {
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [
 				{subject: 'a', actions: ['read', 'destroy']},
@@ -65,8 +65,8 @@ function itCanable(dirty) {
 	});
 
 	it('should disallow action', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			return sec.disallow(['a', 'b'], product, ['destroy']).then(p => {
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			return acl.disallow(['a', 'b'], product, ['destroy']).then(p => {
 				const permissions = dirty ? product._permissions : p.permissions;
 				assert.sameDeepMembers(permissions, [{subject: 'a', actions: ['read']}, {
 					subject: 'b',
@@ -77,70 +77,70 @@ function itCanable(dirty) {
 	});
 
 	it('should can for all without permissions set', () => {
-		assert.eventually.isTrue(sec.can('a', product, 'read'));
+		assert.eventually.isTrue(acl.can('a', product, 'read'));
 	});
 
 	it('should can for all with empty permissions', () => {
-		return sec.allow(['a', 'b'], product, []).then(() => {
-			assert.eventually.isTrue(sec.can('a', product, 'read'));
+		return acl.allow(['a', 'b'], product, []).then(() => {
+			assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for all with `*` action permitted', () => {
-		return sec.allow(['a', 'b'], product, '*').then(() => {
-			assert.eventually.isTrue(sec.can('a', product, 'read'));
+		return acl.allow(['a', 'b'], product, '*').then(() => {
+			assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for all with `all` action permitted', () => {
-		return sec.allow(['a', 'b'], product, 'all').then(() => {
-			assert.eventually.isTrue(sec.can('a', product, 'read'));
+		return acl.allow(['a', 'b'], product, 'all').then(() => {
+			assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for single permitted action', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(sec.can('a', product, 'read'));
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for multiple permitted actions', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(sec.can('a', product, ['read', 'destroy']));
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			assert.eventually.isTrue(acl.can('a', product, ['read', 'destroy']));
 		});
 	});
 
 	it('should `can` not for single un-permitted action', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(sec.cannot('a', product, ['manage']));
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			assert.eventually.isTrue(acl.cannot('a', product, ['manage']));
 		});
 	});
 
 	it('should `can` not for multiple un-permitted action', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(sec.cannot('a', product, ['read', 'manage']));
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			assert.eventually.isTrue(acl.cannot('a', product, ['read', 'manage']));
 		});
 	});
 
 	it('should `can` not for single un-permitted subject', () => {
-		return sec.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(sec.cannot('c', product, ['read']));
+		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
+			assert.eventually.isTrue(acl.cannot('c', product, ['read']));
 		});
 	});
 
 	it('should work for string entity', () => {
-		return sec.allow('tom', 'Product', 'read').then(() => {
-			return sec.models.SecEntity.findOne({entityType: 'Product'}).then(inst => {
+		return acl.allow('tom', 'Product', 'read').then(() => {
+			return acl.models.SecEntity.findOne({entityType: 'Product'}).then(inst => {
 				assert.sameDeepMembers(inst.permissions, [{subject: 'tom', actions: ['read']}]);
 			});
 		});
 	});
 
 	it('should remove permissions for entity', () => {
-		return sec.allow('tom', product, 'read').then(p => {
+		return acl.allow('tom', product, 'read').then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['read']}]);
-			return sec.remove(product).then(result => {
+			return acl.remove(product).then(result => {
 				if (dirty) {
 					assert.isNull(result._permissions);
 				} else {
