@@ -195,20 +195,24 @@ class Roles {
 	 * @return {Promise.<[String]>}
 	 */
 	recurseParentRoleIds(roles) {
-		const recurse = (roles, answer = []) => {
-			return this.getParentRoleIds(roles)
+		return this.recurseParentRoles(roles).map(r => r.id);
+	}
+
+	recurseParentRoles(roles) {
+		const recurse = (roles, answer = {}) => {
+			return this.getParentRoles(roles)
 			// exclude resolved role to avoid cycle parent reference
-				.then(parentIds => _.filter(parentIds, id => !answer.includes(id)))
-				.then(parentIds => {
-					if (_.isEmpty(parentIds)) {
+				.then(parents => _.filter(parents, p => p && !answer[p.id]))
+				.then(parents => {
+					if (_.isEmpty(parents)) {
 						return answer;
 					}
-					answer.push(...parentIds);
-					return recurse(parentIds, answer);
+					_.forEach(parents, p => answer[p.id] = p);
+					return recurse(parents, answer);
 				});
 		};
 
-		return recurse(roles);
+		return recurse(roles).then(_.values);
 	}
 
 	//----------------------------------------------
@@ -291,10 +295,12 @@ class Roles {
 		const {SecRoleMapping} = this.sec.models;
 		const where = {scope: this.sec.scope, userId: {inq: user}};
 		const promise = PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb))
-			.map(m => m.roleId).then(_.uniq);
+			.map(m => m.roleId).then(roleIds => this.resolveRoles(roleIds));
 		if (recursively) {
 			// noinspection JSValidateTypes
-			return promise.then(roleIds => this.recurseParentRoleIds(roleIds).then(parentIds => _.union(roleIds, parentIds)));
+			return promise.then(roles => this.recurseParentRoles(roles)
+				.then(parents => _.concat(roles, parents)))
+				.then(roles => _.uniqBy(roles, 'id'))
 		}
 		// noinspection JSValidateTypes
 		return promise;

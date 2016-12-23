@@ -173,7 +173,7 @@ describe('acl/roles', () => {
 			]).then(() => {
 				return X.findUserRoles('Tom').then(roles => {
 					assert.lengthOf(roles, 2);
-					assert.sameDeepMembers(roles, [XA.id, XB.id]);
+					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id]);
 				});
 			});
 		});
@@ -197,7 +197,7 @@ describe('acl/roles', () => {
 			]).then(() => {
 				return X.findUserRoles('Merlin', true).then(roles => {
 					assert.lengthOf(roles, 4);
-					assert.sameDeepMembers(roles, [XA.id, XB.id, XC.id, XABC.id]);
+					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id, XC.id, XABC.id]);
 				});
 			});
 		});
