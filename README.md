@@ -28,4 +28,4 @@ $ npm test              # Lint and Run unit tests with Mocha
 
 ### License
 
-MIT © [Yuan Tao]()
+MIT © [Yuan Tao](https://github.com/taoyuan)
