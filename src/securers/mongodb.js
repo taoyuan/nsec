@@ -47,7 +47,7 @@ module.exports = function (Model, opts) {
 		}
 
 		PromiseA.resolve(getCurrentSubjects()).then(subjects => {
-			subjects = arrify(subjects);
+			subjects = arrify(subjects).map(utils.identify);
 			if (subjects.includes(admin)) {
 				return;
 			}
