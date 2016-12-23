@@ -69,7 +69,7 @@ module.exports = function (Role) {
 	 */
 	Role.resolve = function (roles, filter) {
 		let scope;
-		if (_.isString(filter)) {
+		if (_.isString(filter) || _.isNull(filter)) {
 			scope = filter;
 			filter = (role => role.scope === scope);
 		}

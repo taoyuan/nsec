@@ -57,6 +57,18 @@ describe('acl/roles', () => {
 			.then(count => assert.equal(count, 0));
 	});
 
+	it('should resolve roles', () => {
+		return Promise.all([
+			acl.addRole({scope: null, name: 'member'}),
+			acl.addRole({scope: 'Store:A', name: 'member'}),
+			acl.addRole({scope: 'Store:B', name: 'member'})
+		]).then(() => {
+			return acl.resolveRoles('member').then(roles => {
+				assert.lengthOf(roles, 1);
+			});
+		});
+	});
+
 	it('should inherits from parents', () => {
 		const scoped = acl.scoped();
 		return Promise.all([
