@@ -113,6 +113,20 @@ describe('acl/roles', () => {
 		});
 	});
 
+	it('should assign user roles with null scope', () => {
+		const scoped = acl.scoped();
+		return createInheritedRoles(scoped).then(([A, B, C]) => {
+			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
+				assert.lengthOf(mappings, 3);
+				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
+					{roleId: A.id, scope: null, userId: 'Tom'},
+					{roleId: B.id, scope: null, userId: 'Tom'},
+					{roleId: C.id, scope: null, userId: 'Tom'}
+				]);
+			});
+		});
+	});
+
 	it('should unassign user roles', () => {
 		const scoped = acl.scoped('123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {

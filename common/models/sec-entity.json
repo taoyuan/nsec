@@ -1,8 +1,10 @@
 {
-  "name": "SecEntity",
-  "properties": {
-	"entityType": "string",
-	"entityId": "string",
-	"permissions": ["object"]
-  }
+	"name": "SecEntity",
+	"properties": {
+		"entityType": "string",
+		"entityId": "string",
+		"permissions": [
+			"object"
+		]
+	}
 }

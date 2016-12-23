@@ -1,32 +1,31 @@
 {
-  "name": "SecRoleMapping",
-  "properties": {
-	"id": {
-	  "type": "string",
-	  "id": true,
-	  "generated": false
+	"name": "SecRoleMapping",
+	"properties": {
+		"id": {
+			"type": "string",
+			"id": true,
+			"generated": false
+		},
+		"userId": {
+			"type": "string",
+			"required": true,
+			"index": true
+		},
+		"roleId": {
+			"type": "string",
+			"required": true,
+			"index": true
+		},
+		"scope": {
+			"type": "string",
+			"index": true
+		}
 	},
-    "userId": {
-      "type": "string",
-	  "required": true,
-      "index": true
-    },
-    "roleId": {
-      "type": "string",
-	  "required": true,
-      "index": true
-    },
-    "scope": {
-      "type": "string",
-	  "required": true,
-      "index": true
-    }
-  },
-  "relations": {
-    "role": {
-      "type": "belongsTo",
-      "model": "SecRole",
-      "foreignKey": "roleId"
-    }
-  }
+	"relations": {
+		"role": {
+			"type": "belongsTo",
+			"model": "SecRole",
+			"foreignKey": "roleId"
+		}
+	}
 }
