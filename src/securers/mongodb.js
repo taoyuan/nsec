@@ -46,10 +46,14 @@ module.exports = function (Model, opts) {
 		// 		 	params: args,
 		// 	 	},
 		// 	};
-		const {req} = ctx;
+		const {req, options} = ctx;
+
 		if (ctx.model !== modelName || !COMMAND.includes(req.command) || !property) {
-			next();
-			return;
+			return next();
+		}
+
+		if (options && (options.secure === false || options.skipSecure)) {
+			return next();
 		}
 
 		PromiseA.resolve(getCurrentSubjects()).then(subjects => {
