@@ -41,6 +41,7 @@
     "hoek": "^4.1.0",
     "joi": "^10.0.5",
     "lodash": "^4.17.2",
+    "needs": "^1.0.3",
     "shortid": "^2.2.6"
   },
   "optionalDependencies": {

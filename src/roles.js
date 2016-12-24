@@ -300,7 +300,7 @@ class Roles {
 			// noinspection JSValidateTypes
 			return promise.then(roles => this.recurseParentRoles(roles)
 				.then(parents => _.concat(roles, parents)))
-				.then(roles => _.uniqBy(roles, 'id'))
+				.then(roles => _.uniqBy(roles, 'id'));
 		}
 		// noinspection JSValidateTypes
 		return promise;
