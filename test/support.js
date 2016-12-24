@@ -8,7 +8,7 @@ const PromiseA = require('bluebird');
 const pkg = require('../package.json');
 
 const DataSource = require('loopback-datasource-juggler').DataSource;
-const ds = exports.ds = new DataSource('mongodb', {database: '__test__' + pkg.name});
+const ds = exports.ds = new DataSource('mongodb', {database: '__test__' + pkg.name, strictObjectIDCoercion: true});
 require('./mocks/models/user')(ds);
 require('./mocks/models/store')(ds);
 require('./mocks/models/product')(ds);

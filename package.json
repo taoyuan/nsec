@@ -60,7 +60,7 @@
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
     "chai-as-promised": "^6.0.0",
-    "loopback-connector-mongodb": "^1.17.0",
+    "loopback-connector-mongodb": "taoyuan/loopback-connector-mongodb",
     "needs": "^1.0.3",
     "xo": "^0.17.1"
   },

@@ -49,5 +49,9 @@ function typeid(entity) {
 		throw new Error('[typeid] Invalid entity: ' + JSON.stringify(entity));
 	}
 
+	if (_.isObject(id)) {
+		id = id.toString();
+	}
+
 	return {type, id};
 }
