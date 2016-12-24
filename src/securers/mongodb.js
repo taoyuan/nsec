@@ -10,8 +10,8 @@ const utils = require('../utils');
 // TODO Should we deal with commands: update, remove ?
 const COMMAND = ['find', 'findOne', 'findAndModify', 'count'];
 
-module.exports = function (Model, opts) {
-	const modelName = Model.modelName;
+module.exports = function (acl, model, opts) {
+	const modelName = model.modelName;
 	let {dirty, property, admin, actions, getCurrentSubjects} = opts;
 
 	assert(dirty, 'MongoDB securer only support dirty mode');
@@ -25,16 +25,16 @@ module.exports = function (Model, opts) {
 	}
 	actions = actions.map(_.toUpper);
 
-	if (Model.definition.properties[property]) {
+	if (model.definition.properties[property]) {
 		throw new Error(util.format('Property "%" has been exist in Model "%s", specify another property for permissions',
 			property, modelName));
 	}
 
 	// Define permissions property
-	Model.defineProperty(property, {type: [Object]});
+	model.defineProperty(property, {type: [Object]});
 
 	// Hide permissions property
-	utils.hideProperty(Model, property);
+	utils.hideProperty(model, property);
 
 	return function (ctx, next) {
 		// ctx:
@@ -46,31 +46,42 @@ module.exports = function (Model, opts) {
 		// 		 	params: args,
 		// 	 	},
 		// 	};
-		const {req, options} = ctx;
+		let {req, options} = ctx;
 
 		if (ctx.model !== modelName || !COMMAND.includes(req.command) || !property) {
 			return next();
 		}
 
-		if (options && (options.secure === false || options.skipSecure)) {
+		options = options || {};
+		if (options.secure === false || options.skipSecure) {
 			return next();
 		}
 
-		PromiseA.resolve(getCurrentSubjects()).then(subjects => {
-			subjects = arrify(subjects).map(s => utils.identify(s));
-			if (subjects.includes(admin)) {
-				return;
-			}
+		const userId = options.accessToken && options.accessToken.userId;
 
-			const cond = {
-				$or: [
-					{[property]: null},
-					{[property]: {$size: 0}},
-					{[property]: {$elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
-				]
-			};
+		PromiseA.resolve()
+			.then(() => {
+				if (_.isFunction(getCurrentSubjects)) {
+					return getCurrentSubjects();
+				} else if (userId) {
+					return acl.scoped('*').findUserRoles(userId, true).then(roles => [userId, ...roles]);
+				}
+			})
+			.then(subjects => {
+				subjects = arrify(subjects).map(s => utils.identify(s));
+				if (_.isEmpty(subjects) || subjects.includes(admin)) {
+					return;
+				}
 
-			req.params[0] = _.isEmpty(req.params[0]) ? cond : {$and: [req.params[0], cond]};
-		}).nodeify(next);
+				const cond = {
+					$or: [
+						{[property]: null},
+						{[property]: {$size: 0}},
+						{[property]: {$elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
+					]
+				};
+
+				req.params[0] = _.isEmpty(req.params[0]) ? cond : {$and: [req.params[0], cond]};
+			}).nodeify(next);
 	};
 };

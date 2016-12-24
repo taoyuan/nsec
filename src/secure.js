@@ -4,7 +4,7 @@ const _ = require('lodash');
 const PromiseA = require('bluebird');
 const securers = require('./securers');
 
-module.exports = function (Model, opts) {
+module.exports = function (acl, Model, opts) {
 	const connector = Model.getDataSource().connector;
 	const securer = securers.getSecurer(connector.name);
 	if (!securer) {
@@ -16,15 +16,12 @@ module.exports = function (Model, opts) {
 	// eslint-disable-next-line
 	Model.__nsec_secured__ = true;
 
-	opts = opts || {};
 	if (_.isFunction(opts)) {
 		opts = {getCurrentSubjects: opts};
 	}
-	opts = _.defaults(opts, {
-		getCurrentSubjects: _.noop
-	});
+	opts = opts || {};
 
-	const secure = securer(Model, opts);
+	const secure = securer(acl, Model, opts);
 
 	connector.observe('before execute', (ctx, next) => {
 		if (secure.length > 1) {

@@ -147,10 +147,11 @@ module.exports = function (sec, opts) {
 	 * Secure a model class for find
 	 *
 	 * @param {Function} Model model class to secure
- */
+	 * @param options
+	 */
 	sec.secure = function (Model, options) {
 		options = _.defaults(options || {}, opts);
-		return secure(Model, options);
+		return secure(this, Model, options);
 	};
 
 	// ---------------------------------------
@@ -190,7 +191,7 @@ module.exports = function (sec, opts) {
 				if (!permission) {
 					return false;
 				}
-				if (_.find(permission.actions, action => action === '*' || action === 'all')) {
+				if (_.find(permission.actions, action => action === '*' || action === 'ALL')) {
 					return true;
 				}
 				actions = actions.filter(action => !_.includes(permission.actions, action));

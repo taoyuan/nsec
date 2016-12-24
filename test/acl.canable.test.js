@@ -77,54 +77,54 @@ function itCanable(dirty) {
 	});
 
 	it('should can for all without permissions set', () => {
-		assert.eventually.isTrue(acl.can('a', product, 'read'));
+		return assert.eventually.isTrue(acl.can('a', product, 'read'));
 	});
 
 	it('should can for all with empty permissions', () => {
 		return acl.allow(['a', 'b'], product, []).then(() => {
-			assert.eventually.isTrue(acl.can('a', product, 'read'));
+			return assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for all with `*` action permitted', () => {
 		return acl.allow(['a', 'b'], product, '*').then(() => {
-			assert.eventually.isTrue(acl.can('a', product, 'read'));
+			return assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for all with `all` action permitted', () => {
 		return acl.allow(['a', 'b'], product, 'all').then(() => {
-			assert.eventually.isTrue(acl.can('a', product, 'read'));
+			return assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for single permitted action', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.can('a', product, 'read'));
+			return assert.eventually.isTrue(acl.can('a', product, 'read'));
 		});
 	});
 
 	it('should can for multiple permitted actions', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.can('a', product, ['read', 'destroy']));
+			return assert.eventually.isTrue(acl.can('a', product, ['read', 'destroy']));
 		});
 	});
 
 	it('should `can` not for single un-permitted action', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.cannot('a', product, ['manage']));
+			return assert.eventually.isTrue(acl.cannot('a', product, ['manage']));
 		});
 	});
 
 	it('should `can` not for multiple un-permitted action', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.cannot('a', product, ['read', 'manage']));
+			return assert.eventually.isTrue(acl.cannot('a', product, ['read', 'manage']));
 		});
 	});
 
 	it('should `can` not for single un-permitted subject', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.cannot('c', product, ['READ']));
+			return assert.eventually.isTrue(acl.cannot('c', product, ['READ']));
 		});
 	});
 
