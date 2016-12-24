@@ -18,7 +18,7 @@ module.exports = function (sec, opts) {
 		const multiple = Array.isArray(entities);
 		subjects = _.uniq(arrify(subjects)).map(item => utils.identify(item)).filter(_.identity);
 		entities = _.uniq(arrify(entities));
-		actions = _.uniq(arrify(actions));
+		actions = _.uniq(arrify(actions)).map(_.toUpper);
 
 		if (_.isEmpty(subjects) ||
 			_.isEmpty(entities) ||
@@ -56,11 +56,11 @@ module.exports = function (sec, opts) {
 		subjects = schema.apply('subjects', subjects);
 		entities = schema.apply('entities', entities);
 
-		if (_.isNil(actions) || actions === '*' || actions === 'all') {
+		if (_.isNil(actions) || (_.isString(actions) && ['*', 'ALL'].includes(_.toUpper(actions)))) {
 			actions = '*';
 		} else {
 			actions = schema.apply('actions', actions);
-			actions = _.uniq(arrify(actions));
+			actions = _.uniq(arrify(actions)).map(_.toUpper);
 		}
 
 		const multiple = Array.isArray(entities);
@@ -159,7 +159,7 @@ module.exports = function (sec, opts) {
 
 	function _can(subjects, entity, actions) {
 		subjects = _.uniq(arrify(subjects)).map(item => utils.identify(item)).filter(_.identity);
-		actions = _.uniq(arrify(actions));
+		actions = _.uniq(arrify(actions)).map(_.toUpper);
 
 		if (_.isEmpty(subjects)) {
 			return PromiseA.resolve(false);

@@ -43,14 +43,14 @@ function itCanable(dirty) {
 	it('should allow single action', () => {
 		return acl.allow(tom, product, 'read').then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
-			assert.sameDeepMembers(permissions, [{subject: 'User:' + tom.id, actions: ['read']}]);
+			assert.sameDeepMembers(permissions, [{subject: 'User:' + tom.id, actions: ['READ']}]);
 		});
 	});
 
 	it('should allow multiple actions', () => {
 		return acl.allow('tom', product, ['read', 'destroy']).then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
-			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['read', 'destroy']}]);
+			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['READ', 'DESTROY']}]);
 		});
 	});
 
@@ -58,8 +58,8 @@ function itCanable(dirty) {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [
-				{subject: 'a', actions: ['read', 'destroy']},
-				{subject: 'b', actions: ['read', 'destroy']}
+				{subject: 'a', actions: ['READ', 'DESTROY']},
+				{subject: 'b', actions: ['READ', 'DESTROY']}
 			]);
 		});
 	});
@@ -68,9 +68,9 @@ function itCanable(dirty) {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
 			return acl.disallow(['a', 'b'], product, ['destroy']).then(p => {
 				const permissions = dirty ? product._permissions : p.permissions;
-				assert.sameDeepMembers(permissions, [{subject: 'a', actions: ['read']}, {
+				assert.sameDeepMembers(permissions, [{subject: 'a', actions: ['READ']}, {
 					subject: 'b',
-					actions: ['read']
+					actions: ['READ']
 				}]);
 			});
 		});
@@ -124,14 +124,14 @@ function itCanable(dirty) {
 
 	it('should `can` not for single un-permitted subject', () => {
 		return acl.allow(['a', 'b'], product, ['read', 'destroy']).then(() => {
-			assert.eventually.isTrue(acl.cannot('c', product, ['read']));
+			assert.eventually.isTrue(acl.cannot('c', product, ['READ']));
 		});
 	});
 
 	it('should work for string entity', () => {
 		return acl.allow('tom', 'Product', 'read').then(() => {
 			return acl.models.SecEntity.findOne({entityType: 'Product'}).then(inst => {
-				assert.sameDeepMembers(inst.permissions, [{subject: 'tom', actions: ['read']}]);
+				assert.sameDeepMembers(inst.permissions, [{subject: 'tom', actions: ['READ']}]);
 			});
 		});
 	});
@@ -139,7 +139,7 @@ function itCanable(dirty) {
 	it('should remove permissions for entity', () => {
 		return acl.allow('tom', product, 'read').then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
-			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['read']}]);
+			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['READ']}]);
 			return acl.remove(product).then(result => {
 				if (dirty) {
 					assert.isNull(result._permissions);

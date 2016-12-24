@@ -12,12 +12,18 @@ const COMMAND = ['find', 'findOne', 'findAndModify', 'count'];
 
 module.exports = function (Model, opts) {
 	const modelName = Model.modelName;
-	let {admin, dirty, property, getCurrentSubjects} = opts;
-
-	admin = admin || '$admin';
+	let {dirty, property, admin, actions, getCurrentSubjects} = opts;
 
 	assert(dirty, 'MongoDB securer only support dirty mode');
 	assert(property, '"property" is required');
+
+	admin = admin || '$admin';
+
+	actions = arrify(actions);
+	if (_.isEmpty(actions)) {
+		actions.push('read');
+	}
+	actions = actions.map(_.toUpper);
 
 	if (Model.definition.properties[property]) {
 		throw new Error(util.format('Property "%" has been exist in Model "%s", specify another property for permissions',
@@ -47,22 +53,20 @@ module.exports = function (Model, opts) {
 		}
 
 		PromiseA.resolve(getCurrentSubjects()).then(subjects => {
-			subjects = arrify(subjects).map(utils.identify);
+			subjects = arrify(subjects).map(s => utils.identify(s));
 			if (subjects.includes(admin)) {
 				return;
 			}
 
-			req.params[0] = {
-				$and: [
-					req.params[0],
-					{
-						$or: [
-							{[property]: null},
-							{[property]: {$size: 0}},
-							{[property]: {$elemMatch: {subject: {$in: subjects}, actions: 'read'}}}
-						]
-					}]
+			const cond = {
+				$or: [
+					{[property]: null},
+					{[property]: {$size: 0}},
+					{[property]: {$elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
+				]
 			};
+
+			req.params[0] = _.isEmpty(req.params[0]) ? cond : {$and: [req.params[0], cond]};
 		}).nodeify(next);
 	};
 };
