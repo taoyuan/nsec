@@ -6,13 +6,15 @@ const securers = {
 	mongodb: require('./mongodb')
 };
 
-exports.find = exports.findSecure = function (name) {
+function findSecurer(name) {
 	return securers[(name || '').toLowerCase()];
-};
+}
+exports.find = exports.findSecurer = findSecurer;
 
-exports.get = exports.getSecure = function (name) {
-	const secure = exports.find(name);
+function getSecurer(name) {
+	const secure = findSecurer(name);
 	assert(secure, 'Unsupported secure: ' + name);
 	return secure;
-};
+}
+exports.get = exports.getSecurer = getSecurer;
 
