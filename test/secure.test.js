@@ -16,15 +16,18 @@ describe('secure', () => {
 	it('should secure model find', () => {
 		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
 		acl.secure(Store);
-		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(([storeA, storeB, storeC]) => {
-			return PromiseA.resolve()
-				.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
-				.then(() => acl.allow('tom', storeB, ['read']))
-				.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
-		}).then(() => {
-			return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(stores => {
-				assert.lengthOf(stores, 2);
+		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}, {secure: false})
+			.then(([storeA, storeB, storeC]) => {
+				return PromiseA.resolve()
+					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+					.then(() => acl.allow('tom', storeB, ['read']))
+					.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
+			})
+			.then(() => {
+				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(stores => {
+					assert.lengthOf(stores, 2);
+					assert.sameDeepMembers(stores.map(s => s.name), ['B', 'C']);
+				});
 			});
-		});
 	});
 });

@@ -38,6 +38,7 @@
   "dependencies": {
     "arrify": "^1.0.1",
     "bluebird": "^3.4.6",
+    "debug": "^2.5.1",
     "hoek": "^4.1.0",
     "joi": "^10.0.5",
     "lodash": "^4.17.2",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
     "coveralls": "^2.11.15",
     "eslint": "^3.12.2",
     "eslint-config-airbnb": "^13.0.0",
@@ -56,13 +58,12 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-mocha": "^4.7.0",
     "eslint-plugin-react": "^6.8.0",
+    "loopback-connector-mongodb": "^1.17.0",
     "mocha": "^3.2.0",
+    "needs": "^1.0.3",
     "nyc": "^10.0.0",
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
-    "chai-as-promised": "^6.0.0",
-    "loopback-connector-mongodb": "taoyuan/loopback-connector-mongodb",
-    "needs": "^1.0.3",
     "xo": "^0.17.1"
   },
   "nyc": {

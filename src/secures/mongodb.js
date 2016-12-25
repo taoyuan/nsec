@@ -1,14 +1,12 @@
 'use strict';
 
+const debug = require('debug')('nesc:secure:mongodb');
 const assert = require('assert');
 const _ = require('lodash');
 const PromiseA = require('bluebird');
 const arrify = require('arrify');
 const util = require('util');
 const utils = require('../utils');
-
-// TODO Should we deal with commands: update, remove ?
-const COMMAND = ['find', 'findOne', 'findAndModify', 'count'];
 
 module.exports = function (acl, model, opts) {
 	const modelName = model.modelName;
@@ -36,24 +34,16 @@ module.exports = function (acl, model, opts) {
 	// Hide permissions property
 	utils.hideProperty(model, property);
 
-	return function (ctx, next) {
-		// ctx:
-		// 	{
-		//	 	model: model,
-		// 	 	collection: collection,
-		// 		req: {
-		//			command: command,
-		// 		 	params: args,
-		// 	 	},
-		// 	};
-		let {req, options} = ctx;
-
-		if (ctx.model !== modelName || !COMMAND.includes(req.command) || !property) {
+	model.observe('access', (ctx, next) => {
+		let {query, options} = ctx;
+		options = options || {};
+		if (options.secure === false || options.skipSecure) {
 			return next();
 		}
 
-		options = options || {};
-		if (options.secure === false || options.skipSecure) {
+		// Do not filter if the request is being made against a single model instance.
+		if (_.get(query, 'where.id')) {
+			debug('looking up by Id - skipping access filters');
 			return next();
 		}
 
@@ -69,19 +59,16 @@ module.exports = function (acl, model, opts) {
 			})
 			.then(subjects => {
 				subjects = arrify(subjects).map(s => utils.identify(s));
-				if (_.isEmpty(subjects) || subjects.includes(admin)) {
-					return;
+				if (!_.isEmpty(subjects) && !subjects.includes(admin)) {
+					const cond = {
+						or: [
+							{[property]: null},
+							{[property]: {size: 0}},
+							{[property]: {elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
+						]
+					};
+					query.where = _.isEmpty(query.where) ? cond : {and: [query.where, cond]};
 				}
-
-				const cond = {
-					$or: [
-						{[property]: null},
-						{[property]: {$size: 0}},
-						{[property]: {$elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
-					]
-				};
-
-				req.params[0] = _.isEmpty(req.params[0]) ? cond : {$and: [req.params[0], cond]};
 			}).nodeify(next);
-	};
+	});
 };
