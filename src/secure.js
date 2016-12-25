@@ -13,6 +13,7 @@ module.exports = function (acl, Model, opts) {
 	opts = opts || {};
 
 	const secured = Boolean(Model.__nsec_secure__);
+	// eslint-disable-next-line camelcase
 	Model.__nsec_secure__ = opts || {};
 
 	if (secured) {
@@ -42,6 +43,6 @@ module.exports = function (acl, Model, opts) {
 				observe(ctx);
 				next();
 			}
-		}
+		};
 	}
 };
