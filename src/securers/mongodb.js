@@ -1,6 +1,6 @@
 'use strict';
 
-const debug = require('debug')('nesc:secure:mongodb');
+const debug = require('debug')('nsec:secure:mongodb');
 const assert = require('assert');
 const _ = require('lodash');
 const PromiseA = require('bluebird');
@@ -38,15 +38,6 @@ module.exports = function (acl, model, opts) {
 		access: (ctx, next) => {
 			let {query, options} = ctx;
 			options = options || {};
-			if (options.secure === false || options.skipSecure) {
-				return next();
-			}
-
-			// Do not filter if the request is being made against a single model instance.
-			if (_.get(query, 'where.id')) {
-				debug('looking up by Id - skipping access filters');
-				return next();
-			}
 
 			const userId = options.accessToken && options.accessToken.userId;
 
