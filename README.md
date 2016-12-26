@@ -7,6 +7,8 @@
 
 > A security library for nodejs with roles management and access control
 
+__This library is under heavy development. DO NOT USE IT IN PRODUCTION.__
+
 ### How to Install
 
 ```sh
