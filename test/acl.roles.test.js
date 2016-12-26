@@ -205,6 +205,11 @@ describe('acl/roles', () => {
 					assert.lengthOf(roles, 2);
 					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id]);
 				});
+			}).then(() => {
+				return acl.scoped('*').findUserRoles('Tom').then(roles => {
+					assert.lengthOf(roles, 4);
+					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id, YA.id, YB.id]);
+				});
 			});
 		});
 	});

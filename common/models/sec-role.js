@@ -82,9 +82,11 @@ module.exports = function (Role) {
 				scopeId = id;
 			}
 			if (_.isObject(filter)) {
-				scope = filter.scope || null;
+				scope = filter.scope;
 				scopeId = filter.scopeId;
-				filter = (role => role.scope === scope && (_.isUndefined(scopeId) || role.scopeId === scopeId));
+				filter = (role => {
+					return (_.isUndefined(scope) ||role.scope === scope) && (_.isUndefined(scopeId) || role.scopeId === scopeId)
+				});
 			} else {
 				filter = _.identity;
 			}
