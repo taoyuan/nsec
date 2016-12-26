@@ -76,7 +76,7 @@ module.exports = function (acl, model, opts) {
 							{[property]: {exists: false}},
 							{[property]: null},
 							{[property]: {size: 0}},
-							{[property]: {elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
+							{[property]: {elemMatch: {subject: {$in: subjects}}}} // no matter actions, treat any actions as READ
 						]
 					};
 					query.where = _.isEmpty(query.where) ? cond : {and: [query.where, cond]};

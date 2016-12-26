@@ -20,7 +20,7 @@ describe('secure', () => {
 			.then(([storeA, storeB, storeC]) => {
 				return PromiseA.resolve()
 					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
-					.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
+					.then(() => acl.allow(['tom', 'jerry'], storeC, []));
 			})
 			.then(() => {
 				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(stores => {
