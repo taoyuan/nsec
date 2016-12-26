@@ -20,7 +20,6 @@ describe('secure', () => {
 			.then(([storeA, storeB, storeC]) => {
 				return PromiseA.resolve()
 					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
-					.then(() => acl.allow('tom', storeB, ['read']))
 					.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
 			})
 			.then(() => {

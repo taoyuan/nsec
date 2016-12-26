@@ -73,6 +73,7 @@ module.exports = function (acl, model, opts) {
 					debug('Current subjects: %j', subjects);
 					const cond = {
 						or: [
+							{[property]: {exists: false}},
 							{[property]: null},
 							{[property]: {size: 0}},
 							{[property]: {elemMatch: {subject: {$in: subjects}, actions: {$in: actions}}}}
