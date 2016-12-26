@@ -112,14 +112,14 @@ describe('acl/roles', () => {
 	});
 
 	it('should assign user roles', () => {
-		const scoped = acl.scoped('123');
+		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-					{roleId: A.id, scope: '123', userId: 'Tom'},
-					{roleId: B.id, scope: '123', userId: 'Tom'},
-					{roleId: C.id, scope: '123', userId: 'Tom'}
+					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
+					{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
+					{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom'}
 				]);
 			});
 		});
@@ -131,24 +131,24 @@ describe('acl/roles', () => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-					{roleId: A.id, scope: null, userId: 'Tom'},
-					{roleId: B.id, scope: null, userId: 'Tom'},
-					{roleId: C.id, scope: null, userId: 'Tom'}
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom'},
+					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom'},
+					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom'}
 				]);
 			});
 		});
 	});
 
 	it('should unassign user roles', () => {
-		const scoped = acl.scoped('123');
+		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(() => {
 				return scoped.unassignRolesUsers(A, 'Tom').then(info => {
 					assert.deepEqual(info, {count: 1});
 					return acl.models.SecRoleMapping.find().then(mappings => {
 						assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-							{roleId: B.id, scope: '123', userId: 'Tom'},
-							{roleId: C.id, scope: '123', userId: 'Tom'}
+							{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
+							{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom'}
 						]);
 					});
 				});
@@ -156,7 +156,37 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should find roles by users', () => {
+	it('should find user role mappings', () => {
+		const X1 = acl.scoped('X:1');
+		const X2 = acl.scoped('X:2');
+		const Y3 = acl.scoped('Y:3');
+		return Promise.all([
+			createInheritedRoles(X1),
+			createInheritedRoles(X2),
+			createInheritedRoles(Y3)
+		]).then(([[X1A, X1B, X1C], [X2A, X2B, X2C], [Y3A, Y3B, Y3C]]) => {
+			return Promise.all([
+				X1.assignRolesUsers(X1A, ['Tom', 'Jerry']),
+				X1.assignRolesUsers(X1B, ['Tom', 'Dean', 'Sam']),
+				X1.assignRolesUsers(X1C, ['Merlin']),
+
+				X2.assignRolesUsers(X2A, ['Tom', 'Jerry']),
+				X2.assignRolesUsers(X2B, ['Tom', 'Dean', 'Sam']),
+				X2.assignRolesUsers(X2C, ['Merlin']),
+
+				Y3.assignRolesUsers(Y3A, ['Tom', 'Jerry']),
+				Y3.assignRolesUsers(Y3B, ['Tom', 'Dean', 'Sam']),
+				Y3.assignRolesUsers(Y3C, ['Merlin'])
+			]).then(() => {
+				return acl.scoped('X').findUserRoleMappings('Tom').then(mappings => {
+					assert.lengthOf(mappings, 4);
+					assert.sameDeepMembers(mappings.map(r => r.roleId), [X1A.id, X1B.id, X2A.id, X2B.id]);
+				});
+			});
+		});
+	});
+
+	it('should find user roles', () => {
 		const X = acl.scoped('X');
 		const Y = acl.scoped('Y');
 		return Promise.all([
@@ -179,7 +209,7 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should find roles recursively by users', () => {
+	it('should find user roles recursively', () => {
 		const X = acl.scoped('X');
 		const Y = acl.scoped('Y');
 		return Promise.all([
@@ -203,7 +233,7 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should find users by roles', () => {
+	it('should find role users', () => {
 		const X = acl.scoped('X');
 		const Y = acl.scoped('Y');
 		return Promise.all([

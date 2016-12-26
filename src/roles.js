@@ -8,8 +8,13 @@ const schema = require('./schema');
 
 class Roles {
 
-	constructor(sec) {
-		this.sec = sec;
+	constructor(acl) {
+		this.acl = acl;
+	}
+
+	_withScope(data) {
+		const {scope, scopeId} = this.acl;
+		return Object.assign({scope, scopeId}, data);
 	}
 
 	//----------------------------------------------
@@ -26,12 +31,11 @@ class Roles {
 	findRoles(filter, options) {
 		schema.apply('filter', filter);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 
-		if (this.sec.isScoped) {
-			const where = {scope: this.sec.scope};
+		if (this.acl.isScoped) {
 			filter = filter || {};
-			filter.where = filter.where ? {and: [filter.where, where]} : where;
+			filter.where = this._withScope(filter.where);
 		}
 
 		return SecRole.find(filter, options);
@@ -46,10 +50,10 @@ class Roles {
 	countRoles(where, options) {
 		schema.apply('where', where);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 
-		if (this.sec.isScoped) {
-			where = Object.assign({}, where, {scope: this.sec.scope});
+		if (this.acl.isScoped) {
+			where = this._withScope(where);
 		}
 		return SecRole.count(where, options);
 	}
@@ -62,17 +66,17 @@ class Roles {
 	 * @return {*}
 	 */
 	removeRoles(where, options) {
-		if (this.sec.isScoped) {
+		if (this.acl.isScoped) {
 			schema.apply('argStrObj', where);
 			if (_.isString(where)) {
 				where = {or: [{name: where}, {id: where}]};
 			}
-			where = Object.assign({scope: this.sec.scope}, where);
+			where = this._withScope(where);
 		} else {
 			schema.apply('where', where);
 		}
 
-		const {SecRole, SecRoleMapping} = this.sec.models;
+		const {SecRole, SecRoleMapping} = this.acl.models;
 		return SecRole.find({where, fields: ['id']}).then(ids => {
 			if (_.isEmpty(ids)) {
 				return {count: 0};
@@ -92,17 +96,17 @@ class Roles {
 	 * @return {*}
 	 */
 	addRole(data) {
-		if (this.sec.isScoped) {
+		if (this.acl.isScoped) {
 			schema.apply('argStrObj', data);
 			if (_.isString(data)) {
 				data = {name: data};
 			}
-			data = Object.assign({scope: this.sec.scope}, data);
+			data = this._withScope(data); // Object.assign({scope: this.acl.scope}, data);
 		}
 
 		schema.apply('roleData', data);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 		return PromiseA.fromCallback(cb => SecRole.findOrCreate({where: data}, data, cb));
 	}
 
@@ -121,7 +125,7 @@ class Roles {
 		schema.apply('argRole', role);
 		schema.apply('argRoles', parents);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 		const promise = _.isString(role) ? SecRole.findById(role) : PromiseA.resolve(role);
 		return promise.then(role => role.inherit(parents));
 	}
@@ -137,7 +141,7 @@ class Roles {
 		schema.apply('argRole', role);
 		schema.apply('argRoles', parents);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 		const promise = _.isString(role) ? SecRole.findById(role) : PromiseA.resolve(role);
 		return promise.then(role => role.uninherit(parents));
 	}
@@ -153,7 +157,7 @@ class Roles {
 		schema.apply('argRole', role);
 		schema.apply('argRoles', parents);
 
-		const {SecRole} = this.sec.models;
+		const {SecRole} = this.acl.models;
 		const promise = _.isString(role) ? SecRole.findById(role) : PromiseA.resolve(role);
 		return promise.then(role => role.setInherits(parents));
 	}
@@ -164,8 +168,8 @@ class Roles {
 	 * @return {Promise.<[SecRole]>}
 	 */
 	resolveRoles(roles) {
-		const {SecRole} = this.sec.models;
-		return SecRole.resolve(roles, this.sec.scope);
+		const {SecRole} = this.acl.models;
+		return SecRole.resolve(roles, this._withScope());
 	}
 
 	/**
@@ -230,7 +234,7 @@ class Roles {
 		const proles = this.resolveRoles(roles);
 		users = arrify(users).map(u => normalize(u)).filter(_.identity);
 
-		const {SecRoleMapping} = this.sec.models;
+		const {SecRoleMapping} = this.acl.models;
 
 		// resolve and filter roles according scope
 		// noinspection JSValidateTypes
@@ -240,7 +244,8 @@ class Roles {
 			const items = _.flatten(_.map(roles, role => _.map(users, userId => ({
 				userId,
 				roleId: role.id,
-				scope: role.scope
+				scope: role.scope,
+				scopeId: role.scopeId
 			}))));
 
 			if (_.isEmpty(items)) {
@@ -267,11 +272,11 @@ class Roles {
 			users = arrify(users).map(u => normalize(u)).filter(_.identity);
 		}
 
-		const {SecRoleMapping} = this.sec.models;
+		const {SecRoleMapping} = this.acl.models;
 
 		// noinspection JSValidateTypes
 		return PromiseA.all([roles, users]).then(([roles, users]) => {
-			const where = {scope: this.sec.scope};
+			const where = this._withScope();
 			if (roles !== '*' && !_.isEmpty(users)) {
 				where.roleId = {inq: roles};
 			}
@@ -283,6 +288,13 @@ class Roles {
 		});
 	}
 
+	findUserRoleMappings(user) {
+		user = arrify(user).map(u => normalize(u)).filter(_.identity);
+		const {SecRoleMapping} = this.acl.models;
+		const where = this._withScope({userId: {inq: user}});
+		return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb));
+	}
+
 	/**
 	 * Find user roles with user id
 	 *
@@ -291,11 +303,7 @@ class Roles {
 	 * @return {Promise.<[String]>}
 	 */
 	findUserRoles(user, recursively) {
-		user = arrify(user).map(u => normalize(u)).filter(_.identity);
-		const {SecRoleMapping} = this.sec.models;
-		const where = {scope: this.sec.scope, userId: {inq: user}};
-		const promise = PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb))
-			.map(m => m.roleId).then(roleIds => this.resolveRoles(roleIds));
+		const promise = this.findUserRoleMappings(user).map(m => m.roleId).then(roleIds => this.resolveRoles(roleIds));
 		if (recursively) {
 			// noinspection JSValidateTypes
 			return promise.then(roles => this.recurseParentRoles(roles)
@@ -313,9 +321,9 @@ class Roles {
 	 * @return {Promise.<[String]>}
 	 */
 	findRoleUsers(role) {
-		const {SecRoleMapping} = this.sec.models;
+		const {SecRoleMapping} = this.acl.models;
 		return this.resolveRoles(role).map(role => role.id).then(roles => {
-			const where = {scope: this.sec.scope, roleId: {inq: roles}};
+			const where = this._withScope({roleId: {inq: roles}});
 			return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb))
 				.map(m => m.userId).then(_.uniq);
 		});
@@ -329,16 +337,15 @@ class Roles {
 	 */
 	hasRoles(user, roles) {
 		user = normalize(user);
-		const {SecRoleMapping} = this.sec.models;
+		const {SecRoleMapping} = this.acl.models;
 		return this.resolveRoles(roles).map(role => role.id).then(roles => {
 			if (!user || _.isEmpty(roles)) {
 				return PromiseA.resolve(false);
 			}
-			return SecRoleMapping.count({
-				scope: this.sec.scope,
+			return SecRoleMapping.count(this._withScope({
 				userId: user,
 				roleId: {inq: roles}
-			}).then(c => c === roles.length);
+			})).then(c => c === roles.length);
 		});
 	}
 }

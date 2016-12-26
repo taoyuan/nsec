@@ -20,16 +20,19 @@ describe('acl/scoped', () => {
 	}
 
 	it('should scoped with all supported scope type', () => {
-		let scoped = acl.scoped('123');
-		assert.equal(scoped.scope, '123');
-		scoped = acl.scoped('1', '2', '3');
-		assert.equal(scoped.scope, '1:2:3');
+		let scoped = acl.scoped('Article');
+		assert.equal(scoped.scope, 'Article');
+		scoped = acl.scoped('Article:123');
+		assert.equal(scoped.scope, 'Article');
+		assert.equal(scoped.scopeId, '123');
 		// eslint-disable-next-line
 		scoped = acl.scoped(new Object({id: 123}));
-		assert.equal(scoped.scope, '123');
+		assert.equal(scoped.scope, null);
+		assert.equal(scoped.scopeId, 123);
 		return s.models.Store.findOne().then(store => {
 			scoped = acl.scoped(store);
-			assert.equal(scoped.scope, 'Store:' + store.id);
+			assert.equal(scoped.scope, 'Store');
+			assert.equal(scoped.scopeId, store.id);
 		});
 	});
 

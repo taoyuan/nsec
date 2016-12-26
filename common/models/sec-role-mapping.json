@@ -19,6 +19,10 @@
 		"scope": {
 			"type": "string",
 			"index": true
+		},
+		"scopeId": {
+			"type": "string",
+			"index": true
 		}
 	},
 	"relations": {

@@ -4,6 +4,7 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 const shortid = require('shortid');
 const arrify = require('arrify');
+const utils = require('../../src/utils');
 
 /* eslint-disable */
 /**
@@ -20,8 +21,12 @@ module.exports = function (Role) {
 			return shortid();
 		};
 
+	Role.prototype.resolveParents = function (parents) {
+		return Role.resolve(parents, p => p.id !== this.id);
+	};
+
 	Role.prototype.resolveParentIds = function (parents) {
-		return Role.resolve(parents, p => p.id !== this.id && p.scope === this.scope).map(p => p.id);
+		return this.resolveParents(parents).map(p => p.id);
 	};
 
 	/**
@@ -64,18 +69,27 @@ module.exports = function (Role) {
 	 * Resolve roles with filter function or scope
 	 *
 	 * @param {[Object]|[String]|Object|String} roles
-	 * @param {Function|String} [filter]
+	 * @param {Function|String| Object} [filter]
 	 * @return {Promise.<[Role]>}
 	 */
 	Role.resolve = function (roles, filter) {
 		let scope;
-		if (_.isString(filter) || _.isNull(filter)) {
-			scope = filter;
-			filter = (role => role.scope === scope);
-		}
+		let scopeId;
 		if (!_.isFunction(filter)) {
-			filter = _.identity;
+			if (_.isString(filter) || _.isNull(filter)) {
+				const {type, id} = utils.typeid(filter);
+				scope = type;
+				scopeId = id;
+			}
+			if (_.isObject(filter)) {
+				scope = filter.scope || null;
+				scopeId = filter.scopeId;
+				filter = (role => role.scope === scope && (_.isUndefined(scopeId) || role.scopeId === scopeId));
+			} else {
+				filter = _.identity;
+			}
 		}
+
 		const ids = [];
 		roles = arrify(roles).filter(p => {
 			if (!p) {
@@ -95,6 +109,7 @@ module.exports = function (Role) {
 		const promise = Promise.resolve(_.isEmpty(ids) ? [] : Role.find({
 				where: {
 					scope,
+					scopeId,
 					or: [{
 						id: {inq: ids}
 					}, {

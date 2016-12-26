@@ -38,10 +38,15 @@ class Acl {
 
 		this._opts = opts;
 		this._scope = opts.scope;
+		this._scopeId = opts.scopeId;
 		this._models = opts.models ? opts.models : modeler.load(opts);
 
 		this.roles = new Roles(this);
 		canable(this, opts);
+	}
+
+	get models() {
+		return this._models;
 	}
 
 	get isScoped() {
@@ -52,25 +57,27 @@ class Acl {
 		return this._scope;
 	}
 
-	get models() {
-		return this._models;
+	get scopeId() {
+		return this._scopeId;
 	}
 
 	/**
 	 *
-	 * @param {*} [scope]
+	 * @param {String|Object|undefined} [scope]
+	 * @param {String|undefined} [scopeId]
 	 * @return {Acl}
 	 */
-	scoped(scope) {
+	scoped(scope, scopeId) {
 		if (scope === '*') {
 			scope = undefined;
-		} else if (scope) {
-			scope = _.flatten(_.map(arguments, arg => utils.identify(arg))).filter(_.identity).join(':');
-		} else {
-			scope = null;
+			scopeId = undefined;
+		} else if (arguments.length <= 1) {
+			const {type, id} = utils.typeid(scope);
+			scope = type || null;
+			scopeId = id;
 		}
 
-		return new Acl(Object.assign({}, this._opts, {models: this._models, scope}));
+		return new Acl(Object.assign({}, this._opts, {models: this._models, scope, scopeId}));
 	}
 
 	// ------------------------
@@ -130,6 +137,10 @@ class Acl {
 		return this.roles.unassignRolesUsers(...arguments);
 	}
 
+	findUserRoleMappings(user) {
+		return this.roles.findUserRoleMappings(...arguments);
+	}
+
 	findUserRoles(user, recursively) {
 		return this.roles.findUserRoles(...arguments);
 	}
@@ -141,6 +152,7 @@ class Acl {
 	hasRoles(user, roles) {
 		return this.roles.hasRoles(...arguments);
 	}
+
 	/* eslint-enable */
 }
 

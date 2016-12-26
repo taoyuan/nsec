@@ -1,6 +1,5 @@
 'use strict';
 
-const assert = require('assert');
 const _ = require('lodash');
 
 exports.hideProperty = hideProperty;
@@ -30,26 +29,17 @@ function identify(target, separator = ':') {
 }
 
 exports.typeid = typeid;
-function typeid(entity) {
-	assert(entity, '`entity` must not be null');
-	let type = null;
-	let id = null;
-	if (_.isString(entity)) {
-		type = entity;
-	} else if (_.isObject(entity)) {
-		if (entity.id && entity.constructor.modelName) {
-			type = entity.constructor.modelName;
-			id = entity.id;
-		} else if (entity.id || entity.type) {
-			return entity;
-		}
+function typeid(target) {
+	let type = target;
+	let id;
+	if (_.isString(target)) {
+		[type, id] = target.split(':');
+	} else if (_.isObject(target)) {
+		type = target.constructor.modelName || target.type;
+		id = target.id;
 	}
 
-	if (!type && !id) {
-		throw new Error('[typeid] Invalid entity: ' + JSON.stringify(entity));
-	}
-
-	if (_.isObject(id)) {
+	if (id && _.isObject(id)) {
 		id = id.toString();
 	}
 

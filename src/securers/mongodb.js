@@ -40,17 +40,23 @@ module.exports = function (acl, model, opts) {
 			options = options || {};
 
 			const userId = options.accessToken && options.accessToken.userId;
+			debug(`Current user from options is: %s`, userId);
 
 			PromiseA.resolve()
 				.then(() => {
 					if (_.isFunction(getCurrentSubjects)) {
+						debug('Fetch current subjects from getCurrentSubjects function');
 						return getCurrentSubjects();
 					} else if (userId) {
+						debug('Fetch current subjects from options');
 						return acl.scoped('*').findUserRoles(userId, true).then(roles => [userId, ...roles]);
+					} else {
+						debug('No subjects provided for {getCurrentSubjects} and {options.accessToken}');
 					}
 				})
 				.then(subjects => {
 					subjects = arrify(subjects).map(s => utils.identify(s));
+					debug('Current subjects: %j', subjects);
 					if (!_.isEmpty(subjects) && !subjects.includes(admin)) {
 						const cond = {
 							or: [
@@ -60,6 +66,7 @@ module.exports = function (acl, model, opts) {
 							]
 						};
 						query.where = _.isEmpty(query.where) ? cond : {and: [query.where, cond]};
+						debug('Secured query where: %j', query.where);
 					}
 				}).nodeify(next);
 		}
