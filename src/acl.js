@@ -5,6 +5,7 @@ const _ = require('lodash');
 const modeler = require('./modeler');
 const canable = require('./canable');
 const Roles = require('./roles');
+const secure = require('./secure');
 const utils = require('./utils');
 
 const DEFAULT_PERMISSIONS_PROPERTY = '_permissions';
@@ -78,6 +79,17 @@ class Acl {
 		}
 
 		return new Acl(Object.assign({}, this._opts, {models: this._models, scope, scopeId}));
+	}
+
+	/**
+	 * Secure a model class for find
+	 *
+	 * @param {Function} Model model class to secure
+	 * @param options
+	 */
+	secure(Model, options) {
+		options = _.defaults(options || {}, this._opts);
+		return secure(this, Model, options);
 	}
 
 	// ------------------------

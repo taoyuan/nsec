@@ -13,13 +13,8 @@ module.exports = function (acl, Model, opts) {
 	}
 	opts = opts || {};
 
-	const secured = Boolean(Model.__nsec_secure__);
 	// eslint-disable-next-line camelcase
-	Model.__nsec_secure__ = opts || {};
-
-	if (secured) {
-		return;
-	}
+	Model._nsec_secures = Model._nsec_secures || {};
 
 	let secure = securer(acl, Model, opts);
 	if (_.isFunction(secure)) {
@@ -27,17 +22,28 @@ module.exports = function (acl, Model, opts) {
 	}
 
 	if (secure.access) {
-		Model.observe('access', wrap('access', secure.access));
+		attachObserve('access', Model);
 	}
 
 	if (secure.execute) {
-		connector.observe('execute', wrap('execute', secure.execute));
+		attachObserve('execute', connector);
+	}
+
+	function attachObserve(operation, observer) {
+		if (Model._nsec_secures[operation]) {
+			Model.removeObserver(operation, Model._nsec_secures[operation]);
+		}
+		Model._nsec_secures[operation] = wrap(operation, secure[operation]);
+		observer.observe(operation, Model._nsec_secures[operation]);
 	}
 
 	function wrap(operation, observe) {
 		return (ctx, next) => {
-			const opts = Model.__nsec_secure__ || {};
+			// const opts = Model.__nsec_secure__ || {};
 			ctx.options = _.defaults(ctx.options || {}, {secure: opts.secure});
+
+			debug('---');
+			debug('Securing %s:%s', Model.modelName, operation);
 
 			const {query, options} = ctx;
 			if (options.secure === false || options.skipSecure) {

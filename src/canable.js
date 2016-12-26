@@ -2,7 +2,6 @@ const _ = require('lodash');
 const PromiseA = require('bluebird');
 const arrify = require('arrify');
 const schema = require('./schema');
-const secure = require('./secure');
 const utils = require('./utils');
 
 module.exports = function (sec, opts) {
@@ -141,17 +140,6 @@ module.exports = function (sec, opts) {
 		actions = schema.apply('actions', actions);
 
 		return sec.can(subjects, entity, actions).then(allowed => !allowed);
-	};
-
-	/**
-	 * Secure a model class for find
-	 *
-	 * @param {Function} Model model class to secure
-	 * @param options
-	 */
-	sec.secure = function (Model, options) {
-		options = _.defaults(options || {}, opts);
-		return secure(this, Model, options);
 	};
 
 	// ---------------------------------------
