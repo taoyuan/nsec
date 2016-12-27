@@ -16,6 +16,11 @@ exports.apply = function (type, options, message) {
 internals.strobj = [joi.object(), joi.string()];
 internals.objs = [joi.object(), joi.array().items(joi.object())];
 
+internals.models = joi.alternatives([
+	joi.func(),
+	joi.array().items(joi.func())
+]);
+
 internals.entity = joi.object({
 	save: joi.func().optional()
 }).unknown();

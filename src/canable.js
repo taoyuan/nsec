@@ -52,13 +52,13 @@ module.exports = function (sec, opts) {
 	};
 
 	sec.disallow = function (subjects, entities, actions) {
-		subjects = schema.apply('subjects', subjects);
-		entities = schema.apply('entities', entities);
+		schema.apply('subjects', subjects);
+		schema.apply('entities', entities);
 
 		if (_.isNil(actions) || (_.isString(actions) && ['*', 'ALL'].includes(_.toUpper(actions)))) {
 			actions = '*';
 		} else {
-			actions = schema.apply('actions', actions);
+			schema.apply('actions', actions);
 			actions = _.uniq(arrify(actions)).map(_.toUpper);
 		}
 
@@ -105,7 +105,7 @@ module.exports = function (sec, opts) {
 		}
 	};
 
-	sec.remove = function (entities) {
+	sec.removeEntitiesPermissions = function (entities) {
 		const multiple = Array.isArray(entities);
 		entities = schema.apply('entities', entities);
 
@@ -123,6 +123,21 @@ module.exports = function (sec, opts) {
 			entity[property] = null;
 			return saveEntity(entity);
 		}).then(items => multiple ? items : items[0]);
+	};
+
+	sec.removeSubjectsPermissions = function (subjects, models) {
+		schema.apply('subjects', subjects);
+		if (models) schema.apply('models', models);
+
+		models = models ? arrify(subjects) : _.values(sec.securedModels);
+		subjects = _.uniq(arrify(subjects)).map(item => utils.identify(item)).filter(_.identity);
+		return PromiseA.map(models, m => {
+			if (!_.isFunction(_.get(m, '_nsec.removeSubjectsPermissions'))) {
+				return console.warn('nsec - no removeSubjectsPermissions function is attached to model %s, ' +
+					'maybe it is not been secured', m.modelName);
+			}
+			return m._nsec.removeSubjectsPermissions(subjects);
+		});
 	};
 
 	sec.can = function (subjects, entity, actions) {

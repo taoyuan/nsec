@@ -140,7 +140,7 @@ function itCanable(dirty) {
 		return acl.allow('tom', product, 'read').then(p => {
 			const permissions = dirty ? product._permissions : p.permissions;
 			assert.sameDeepMembers(permissions, [{subject: 'tom', actions: ['READ']}]);
-			return acl.remove(product).then(result => {
+			return acl.removeEntitiesPermissions(product).then(result => {
 				if (dirty) {
 					assert.isNull(result._permissions);
 				} else {

@@ -7,29 +7,29 @@ const PromiseA = require('bluebird');
 const arrify = require('arrify');
 const utils = require('../utils');
 
-module.exports = function (acl, model, opts) {
-	const modelName = model.modelName;
-	let {dirty, property, admin, actions, getCurrentSubjects} = opts;
+module.exports = function (acl, Model, opts) {
+	const modelName = Model.modelName;
+	let {dirty, property, admin, getCurrentSubjects} = opts;
 
 	assert(dirty, 'MongoDB securer only support dirty mode');
 	assert(property, '"property" is required');
 
 	admin = admin || 'admin';
 
-	actions = arrify(actions);
-	if (_.isEmpty(actions)) {
-		actions.push('read');
-	}
-	actions = actions.map(_.toUpper);
-
-	if (!model.definition.properties[property]) {
-		debug('Property "%" has been exist in Model "%s", user it and skip defining', property, modelName);
-
+	if (Model.definition.properties[property]) {
+		debug('Property "%s" has been exist in Model "%s", use it and skip defining', property, modelName);
+	} else {
 		// Define permissions property
-		model.defineProperty(property, {type: [Object]});
+		Model.defineProperty(property, {type: [Object]});
 		// Hide permissions property
-		utils.hideProperty(model, property);
+		utils.hideProperty(Model, property);
 	}
+
+	Model._nsec.removeSubjectsPermissions = function (subjects) {
+		subjects = arrify(subjects);
+		return Model.updateAll({[property]: {elemMatch: {subject: {$in: subjects}}}},
+			{$pull: {[property]: {subject: {$in: subjects}}}}, {allowExtendedOperators: true});
+	};
 
 	return {
 		access: (ctx, next) => {

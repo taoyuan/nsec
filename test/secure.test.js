@@ -93,4 +93,30 @@ describe('secure', () => {
 			});
 		});
 	});
+
+	it('should remove subject permission from models', () => {
+		const acl = nsec(s.ds);
+		acl.secure(Store);
+		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
+			.then(([storeA, storeB, storeC]) => {
+				return PromiseA.resolve()
+					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+					.then(() => acl.allow(['tom', 'jerry'], storeC, ['write']));
+			})
+			.then(() => {
+				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}, {userId: 'tom'}).then(stores => {
+					assert.lengthOf(stores, 2);
+					assert.sameDeepMembers(stores.map(s => s.name), ['B', 'C']);
+				});
+			})
+			.then(() => acl.removeSubjectsPermissions('tom').then(result => {
+				assert.sameDeepMembers(result, [{count: 1}]);
+			}))
+			.then(() => {
+				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}, {userId: 'tom'}).then(stores => {
+					assert.lengthOf(stores, 1);
+					assert.sameDeepMembers(stores.map(s => s.name), ['B']);
+				});
+			});
+	});
 });

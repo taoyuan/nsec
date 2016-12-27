@@ -13,8 +13,9 @@ module.exports = function (acl, Model, opts) {
 	}
 	opts = opts || {};
 
+	const nsecSettings = Model._nsec = Model._nsec || {};
 	// eslint-disable-next-line camelcase
-	Model._nsec_secures = Model._nsec_secures || {};
+	nsecSettings.secures = nsecSettings.secures || {};
 
 	let secure = securer(acl, Model, opts);
 	if (_.isFunction(secure)) {
@@ -29,12 +30,18 @@ module.exports = function (acl, Model, opts) {
 		attachObserve('execute', connector);
 	}
 
+	acl.securedModels = acl.securedModels || {};
+	acl.securedModels[Model.modelName] = Model;
+
+	// ------------------
+	// Internal Functions
+	// ------------------
 	function attachObserve(operation, observer) {
-		if (Model._nsec_secures[operation]) {
-			Model.removeObserver(operation, Model._nsec_secures[operation]);
+		if (nsecSettings.secures[operation]) {
+			Model.removeObserver(operation, nsecSettings.secures[operation]);
 		}
-		Model._nsec_secures[operation] = wrap(operation, secure[operation]);
-		observer.observe(operation, Model._nsec_secures[operation]);
+		nsecSettings.secures[operation] = wrap(operation, secure[operation]);
+		observer.observe(operation, nsecSettings.secures[operation]);
 	}
 
 	function wrap(operation, observe) {
