@@ -16,7 +16,7 @@ exports.load = function (options) {
 		defaultModelSettings: {}
 	}, options);
 
-	let ds = options.dataSource || options.datasource || options.ds;
+	let ds = options.ds || options.dataSource || options.datasource;
 	if (ds === 'string') {
 		ds = {connector: ds};
 	}
