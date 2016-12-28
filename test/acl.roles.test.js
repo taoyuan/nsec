@@ -257,6 +257,21 @@ describe('acl/roles', () => {
 					assert.lengthOf(users, 3);
 					assert.sameDeepMembers(users, ['Tom', 'Dean', 'Sam']);
 				});
+			}).then(() => {
+				return X.findRoleUsers().then(users => {
+					assert.lengthOf(users, 5);
+					assert.sameDeepMembers(users, ['Tom', 'Jerry', 'Dean', 'Sam', 'Merlin']);
+				});
+			}).then(() => {
+				return X.findRoleUsers('all').then(users => {
+					assert.lengthOf(users, 5);
+					assert.sameDeepMembers(users, ['Tom', 'Jerry', 'Dean', 'Sam', 'Merlin']);
+				});
+			}).then(() => {
+				return X.findRoleUsers('*').then(users => {
+					assert.lengthOf(users, 5);
+					assert.sameDeepMembers(users, ['Tom', 'Jerry', 'Dean', 'Sam', 'Merlin']);
+				});
 			});
 		});
 	});

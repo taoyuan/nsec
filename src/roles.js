@@ -318,14 +318,23 @@ class Roles {
 	 * Find role users with role id
 	 *
 	 * @param {SecRole|String|[SecRole]|[String]} role
-	 * @return {Promise.<[String]>}
+	 * @return {Promise}
 	 */
 	findRoleUsers(role) {
 		const {SecRoleMapping} = this.acl.models;
-		return this.resolveRoles(role).map(role => role.id).then(roles => {
-			const where = this._withScope({roleId: {inq: roles}});
-			return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb))
-				.map(m => m.userId).then(_.uniq);
+
+		let promise = PromiseA.resolve();
+		if (role && role !== '*' && role !== 'all') {
+			promise = promise.then(() => {
+				return this.resolveRoles(role).map(role => role.id).then(roles => {
+					return {roleId: {inq: roles}};
+				});
+			});
+		}
+
+		return promise.then(where => {
+			where = this._withScope(where);
+			return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb)).map(m => m.userId).then(_.uniq);
 		});
 	}
 
