@@ -16,9 +16,10 @@ exports.apply = function (type, options, message) {
 internals.strobj = [joi.object(), joi.string()];
 internals.objs = [joi.object(), joi.array().items(joi.object())];
 
+internals.model = joi.func();
 internals.models = joi.alternatives([
-	joi.func(),
-	joi.array().items(joi.func())
+	internals.model,
+	joi.array().items(internals.model)
 ]);
 
 internals.entity = joi.object({
@@ -28,7 +29,8 @@ internals.entity = joi.object({
 internals.entities = joi.alternatives([
 	internals.entity,
 	joi.string(),
-	joi.array().items(internals.entity, joi.string())
+	internals.model,
+	joi.array().items(internals.entity, joi.string(), internals.model)
 ]);
 
 internals.subject = joi.alternatives(internals.strobj);

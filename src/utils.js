@@ -32,6 +32,9 @@ exports.typeid = typeid;
 function typeid(target) {
 	let type = target;
 	let id;
+	if (_.isFunction(target)) {
+		target = target.modelName;
+	}
 	if (_.isString(target)) {
 		[type, id] = target.split(':');
 	} else if (_.isObject(target)) {

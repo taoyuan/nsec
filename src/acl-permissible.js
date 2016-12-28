@@ -27,8 +27,9 @@ module.exports = function (acl, opts) {
 
 		return PromiseA.map(entities, entity => {
 			if (!entity) return;
-			if (!dirty || _.isString(entity)) {
-				const {type: entityType, id: entityId} = utils.typeid(entity);
+			if (!dirty || _.isString(entity) || _.isFunction(entity)) {
+				let {type: entityType, id: entityId} = utils.typeid(entity);
+				entityId = entityId || null;
 				const data = {entityType, entityId};
 				return SecEntity.findOrCreate({where: data}, data).then(([inst]) => allow(inst, 'permissions'));
 			}
@@ -74,8 +75,9 @@ module.exports = function (acl, opts) {
 
 		return PromiseA.map(entities, entity => {
 			if (!entity) return;
-			if (!dirty || _.isString(entity)) {
-				const {type: entityType, id: entityId} = utils.typeid(entity);
+			if (!dirty || _.isString(entity) || _.isFunction(entity)) {
+				let {type: entityType, id: entityId} = utils.typeid(entity);
+				entityId = entityId || null;
 				const data = {entityType, entityId};
 				return SecEntity.findOne({where: data}).then(inst => {
 					if (inst) return disallow(inst, 'permissions');
@@ -113,8 +115,9 @@ module.exports = function (acl, opts) {
 
 		return PromiseA.map(entities, entity => {
 			if (!entity) return;
-			if (!dirty || _.isString(entity)) {
-				const {type: entityType, id: entityId} = utils.typeid(entity);
+			if (!dirty || _.isString(entity) || _.isFunction(entity)) {
+				let {type: entityType, id: entityId} = utils.typeid(entity);
+				entityId = entityId || null;
 				const data = {entityType, entityId};
 				return SecEntity.destroyAll(data);
 			}
