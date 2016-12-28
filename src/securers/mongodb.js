@@ -36,9 +36,7 @@ module.exports = function (acl, Model, opts) {
 			let {query, options} = ctx;
 			options = options || {};
 
-			const userId = (options.accessToken && options.accessToken.userId) ||
-				(options.userId) ||
-				(options.user && options.user.id);
+			const userId = acl.getCurrentUserId(options);
 
 			debug(`Current user from options is: %s`, userId);
 

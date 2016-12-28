@@ -3,7 +3,7 @@
 const _ = require('lodash');
 
 const modeler = require('./modeler');
-const canable = require('./canable');
+const permissible = require('./acl-permissible');
 const Roles = require('./roles');
 const secure = require('./secure');
 const utils = require('./utils');
@@ -18,6 +18,7 @@ class Acl {
 	 * @param {String|Object} [ds]
 	 * @param {Object} [opts]
 	 * @param {String} [opts.scope]
+	 * @param {String} [opts.scopeId]
 	 * @param {Boolean} [opts.dirty] is dirty mode. Default is true.
 	 * @param {String} [opts.property] property name for dirty mode. Default is "_permission".
 	 * @param {Function} [opts.findCorrelatedSubjects] find correlated roles for the subject (user or role).
@@ -43,7 +44,7 @@ class Acl {
 		this._models = opts.models ? opts.models : modeler.load(opts);
 
 		this.roles = new Roles(this);
-		canable(this, opts);
+		permissible(this, opts);
 	}
 
 	get models() {
@@ -90,6 +91,11 @@ class Acl {
 	secure(Model, options) {
 		options = _.defaults(options || {}, this._opts);
 		return secure(this, Model, options);
+	}
+
+	getCurrentUserId(options) {
+		options = options || {};
+		return _.get(options, 'accessToken.userId') || _.get(options, 'user.id') || options.userId;
 	}
 
 	// ------------------------

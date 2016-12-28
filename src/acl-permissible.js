@@ -4,12 +4,12 @@ const arrify = require('arrify');
 const schema = require('./schema');
 const utils = require('./utils');
 
-module.exports = function (sec, opts) {
-	const {SecEntity} = sec.models;
+module.exports = function (acl, opts) {
+	const {SecEntity} = acl.models;
 	let {dirty, property, findCorrelatedSubjects} = opts;
 	findCorrelatedSubjects = findCorrelatedSubjects || _.noop;
 
-	sec.allow = function (subjects, entities, actions) {
+	acl.allow = function (subjects, entities, actions) {
 		subjects = schema.apply('subjects', subjects);
 		entities = schema.apply('entities', entities);
 		actions = schema.apply('actions', actions);
@@ -51,7 +51,7 @@ module.exports = function (sec, opts) {
 		}
 	};
 
-	sec.disallow = function (subjects, entities, actions) {
+	acl.disallow = function (subjects, entities, actions) {
 		schema.apply('subjects', subjects);
 		schema.apply('entities', entities);
 
@@ -105,7 +105,7 @@ module.exports = function (sec, opts) {
 		}
 	};
 
-	sec.removeEntitiesPermissions = function (entities) {
+	acl.removeEntitiesPermissions = function (entities) {
 		const multiple = Array.isArray(entities);
 		entities = schema.apply('entities', entities);
 
@@ -125,11 +125,11 @@ module.exports = function (sec, opts) {
 		}).then(items => multiple ? items : items[0]);
 	};
 
-	sec.removeSubjectsPermissions = function (subjects, models) {
+	acl.removeSubjectsPermissions = function (subjects, models) {
 		schema.apply('subjects', subjects);
 		if (models) schema.apply('models', models);
 
-		models = models ? arrify(subjects) : _.values(sec.securedModels);
+		models = models ? arrify(subjects) : _.values(acl.securedModels);
 		subjects = _.uniq(arrify(subjects)).map(item => utils.identify(item)).filter(_.identity);
 		return PromiseA.map(models, m => {
 			if (!_.isFunction(_.get(m, '_nsec.removeSubjectsPermissions'))) {
@@ -140,28 +140,20 @@ module.exports = function (sec, opts) {
 		});
 	};
 
-	sec.can = function (subjects, entity, actions) {
+	acl.hasPermission = function (subjects, entity, actions) {
 		subjects = schema.apply('subjects', subjects);
 		entity = schema.apply('entity', entity);
 		actions = schema.apply('actions', actions);
 
 		return PromiseA.map(arrify(subjects), subject => _.union([subject], arrify(findCorrelatedSubjects(subject))))
-			.then(_.flatten).then(subjects => _can(subjects, entity, actions));
-	};
-
-	sec.cannot = function (subjects, entity, actions) {
-		subjects = schema.apply('subjects', subjects);
-		entity = schema.apply('entity', entity);
-		actions = schema.apply('actions', actions);
-
-		return sec.can(subjects, entity, actions).then(allowed => !allowed);
+			.then(_.flatten).then(subjects => _hasPermission(subjects, entity, actions));
 	};
 
 	// ---------------------------------------
 	// Internal Functions
 	// ---------------------------------------
 
-	function _can(subjects, entity, actions) {
+	function _hasPermission(subjects, entity, actions) {
 		subjects = _.uniq(arrify(subjects)).map(item => utils.identify(item)).filter(_.identity);
 		actions = _.uniq(arrify(actions)).map(_.toUpper);
 
@@ -177,13 +169,13 @@ module.exports = function (sec, opts) {
 			const data = {entityType, entityId};
 			return PromiseA.resolve(SecEntity.findOne({where: data})).then(inst => {
 				if (!inst) return true;
-				return can(inst, 'permissions');
+				return hasPermission(inst, 'permissions');
 			});
 		}
 
-		return PromiseA.resolve(can(entity, property));
+		return PromiseA.resolve(hasPermission(entity, property));
 
-		function can(target, key) {
+		function hasPermission(target, key) {
 			const permissions = target[key];
 			if (_.isEmpty(permissions)) {
 				return true;
