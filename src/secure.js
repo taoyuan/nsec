@@ -53,6 +53,9 @@ module.exports = function (acl, Model, opts) {
 			debug('Securing %s:%s', Model.modelName, operation);
 
 			const {query, options} = ctx;
+
+			const forceSecure = options.secure === true || options.skipSecure === false;
+
 			if (options.secure === false || options.skipSecure) {
 				debug('{secure: false} or {skipSecure: true} - skipping secure');
 				return next();
@@ -60,7 +63,7 @@ module.exports = function (acl, Model, opts) {
 
 			if (operation === 'access') {
 				// Do not secure if the request is being made against a single model instance.
-				if (query && _.get(query, 'where.id')) {
+				if (!forceSecure && _.get(query, 'where.id')) {
 					debug('looking up by Id - skipping secure');
 					return next();
 				}

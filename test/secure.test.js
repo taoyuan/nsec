@@ -119,4 +119,37 @@ describe('secure', () => {
 				});
 			});
 	});
+
+	it('should ignore secure default when the request is being made against a single model instance', () => {
+		const acl = nsec(s.ds);
+		acl.secure(Store);
+		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
+			.then(([storeA, storeB, storeC]) => {
+				return PromiseA.resolve()
+					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+					.then(() => acl.allow(['tom', 'jerry'], storeC, ['write']));
+			})
+			.then(() => {
+				return Store.findById('A', {}, {userId: 'tom'}).then(store => {
+					assert.ok(store);
+					assert.equal(store.name, 'A');
+				});
+			});
+	});
+
+	it('should apply secure for "secure=true" when the request is being made against a single model instance', () => {
+		const acl = nsec(s.ds);
+		acl.secure(Store);
+		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
+			.then(([storeA, storeB, storeC]) => {
+				return PromiseA.resolve()
+					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+					.then(() => acl.allow(['tom', 'jerry'], storeC, ['write']));
+			})
+			.then(() => {
+				return Store.findById('A', {}, {userId: 'tom', secure: true}).then(store => {
+					assert.notOk(store);
+				});
+			});
+	});
 });
