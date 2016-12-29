@@ -5,7 +5,7 @@ const _ = require('lodash');
 const modeler = require('./modeler');
 const permissible = require('./acl-permissible');
 const Roles = require('./roles');
-const secure = require('./secure');
+const securer = require('./securer');
 const utils = require('./utils');
 
 const DEFAULT_PERMISSIONS_PROPERTY = '_permissions';
@@ -92,7 +92,11 @@ class Acl {
 	 */
 	secure(Model, options) {
 		options = _.defaults(options || {}, this._opts);
-		return secure(this, Model, options);
+		return securer.secure(this, Model, options);
+	}
+
+	unsecure(Model) {
+		return securer.unsecure(this, Model);
 	}
 
 	getCurrentUserId(options) {

@@ -37,16 +37,16 @@
   "homepage": "https://github.com/taoyuan/nsec#readme",
   "dependencies": {
     "arrify": "^1.0.1",
-    "bluebird": "^3.4.6",
-    "debug": "^2.5.1",
+    "bluebird": "^3.4.7",
+    "debug": "^2.6.0",
     "hoek": "^4.1.0",
-    "joi": "^10.0.5",
-    "lodash": "^4.17.2",
+    "joi": "^10.1.0",
+    "lodash": "^4.17.3",
     "needs": "^1.0.3",
     "shortid": "^2.2.6"
   },
   "optionalDependencies": {
-    "loopback-datasource-juggler": "^2.53.0"
+    "loopback-datasource-juggler": "^3.1.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -55,8 +55,8 @@
     "eslint": "^3.12.2",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jsx-a11y": "^2.2.3",
-    "eslint-plugin-mocha": "^4.7.0",
+    "eslint-plugin-jsx-a11y": "^3.0.2",
+    "eslint-plugin-mocha": "^4.8.0",
     "eslint-plugin-react": "^6.8.0",
     "loopback-connector-mongodb": "^1.17.0",
     "mocha": "^3.2.0",

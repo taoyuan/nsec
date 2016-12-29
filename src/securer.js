@@ -2,46 +2,49 @@
 
 const debug = require('debug')('nsec:secure');
 const _ = require('lodash');
-const securers = require('./securers');
+const adapters = require('./secure-adapters');
 
-module.exports = function (acl, Model, opts) {
+function secure(acl, Model, opts) {
 	const connector = Model.getDataSource().connector;
-	const securer = securers.getSecurer(connector.name);
+	const adapter = adapters.get(connector.name);
+	const modelName = Model.modelName;
+
+	debug('Securing model %s', modelName);
 
 	if (_.isFunction(opts)) {
 		opts = {getCurrentSubjects: opts};
 	}
 	opts = opts || {};
 
-	const nsecSettings = Model._nsec = Model._nsec || {};
+	const settings = Model._nsec = Model._nsec || {};
 	// eslint-disable-next-line camelcase
-	nsecSettings.secures = nsecSettings.secures || {};
+	settings.secures = settings.secures || {};
 
-	let secure = securer(acl, Model, opts);
-	if (_.isFunction(secure)) {
-		secure = {access: secure};
+	let secures = adapter(acl, Model, opts);
+	if (_.isFunction(secures)) {
+		secures = {access: secures};
 	}
 
-	if (secure.access) {
+	if (secures.access) {
 		attachObserve('access', Model);
 	}
 
-	if (secure.execute) {
+	if (secures.execute) {
 		attachObserve('execute', connector);
 	}
 
 	acl.securedModels = acl.securedModels || {};
-	acl.securedModels[Model.modelName] = Model;
+	acl.securedModels[modelName] = Model;
 
 	// ------------------
 	// Internal Functions
 	// ------------------
 	function attachObserve(operation, observer) {
-		if (nsecSettings.secures[operation]) {
-			Model.removeObserver(operation, nsecSettings.secures[operation]);
+		if (settings.secures[operation]) {
+			observer.removeObserver(operation, settings.secures[operation]);
 		}
-		nsecSettings.secures[operation] = wrap(operation, secure[operation]);
-		observer.observe(operation, nsecSettings.secures[operation]);
+		settings.secures[operation] = wrap(operation, secures[operation]);
+		observer.observe(operation, settings.secures[operation]);
 	}
 
 	function wrap(operation, observe) {
@@ -50,7 +53,7 @@ module.exports = function (acl, Model, opts) {
 			ctx.options = _.defaults(ctx.options || {}, {secure: opts.secure});
 
 			debug('---');
-			debug('Securing %s:%s', Model.modelName, operation);
+			debug('Securing %s:%s', modelName, operation);
 
 			const {query, options} = ctx;
 
@@ -77,4 +80,27 @@ module.exports = function (acl, Model, opts) {
 			}
 		};
 	}
-};
+}
+
+function unsecure(acl, Model) {
+	const modelName = Model.modelName;
+	const connector = Model.getDataSource().connector;
+
+	debug('Unsecuring model %s', modelName);
+
+	const secures = _.get(Model, '_nsec.secures');
+	if (!_.isEmpty(secures)) {
+		_.forEach(secures, (listener, operation) => {
+			if (operation === 'execute') {
+				connector.removeObserver(operation, listener);
+			} else {
+				Model.removeObserver(operation, listener);
+			}
+		});
+		delete Model._nsec;
+	}
+
+	delete acl.securedModels[modelName];
+}
+
+module.exports = {secure, unsecure};

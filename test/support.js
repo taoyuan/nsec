@@ -14,16 +14,18 @@ require('./mocks/models/store')(ds);
 require('./mocks/models/product')(ds);
 
 function loadMockModelsFixtures(ds) {
-	const datas = needs(path.join(__dirname, './fixtures/models'));
-	return PromiseA.resolve(_.map(datas, (data, model) => {
+	const fixtures = needs(path.join(__dirname, './fixtures/models'));
+	return PromiseA.all(_.map(fixtures, (data, model) => {
 		if (ds.models[model]) {
-			return ds.models[model].create(data);
+			return PromiseA.fromCallback(cb => ds.models[model].create(data, cb));
 		}
 	}));
 }
 
 function cleanup(ds) {
-	return PromiseA.map(_.values(ds.models), model => model.dataSource && model.destroyAll());
+	const models = _.values(ds.models).filter(m => m.destroyAll);
+	// console.log('deleting all data for models %j', models.map(m => m.modelName));
+	return PromiseA.map(models, model => model.destroyAll({}));
 }
 
 exports.setup = function () {

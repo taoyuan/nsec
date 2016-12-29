@@ -10,8 +10,12 @@ const s = require('./support');
 const {Store} = s.ds.models;
 
 describe('secure', () => {
-	beforeEach(() => s.setup());
-	afterEach(() => s.teardown());
+	beforeEach(() => {
+		return s.setup();
+	});
+	afterEach(() => {
+		return s.teardown();
+	});
 
 	it('should secure model with default secure', () => {
 		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
@@ -27,7 +31,8 @@ describe('secure', () => {
 					assert.lengthOf(stores, 2);
 					assert.sameDeepMembers(stores.map(s => s.name), ['B', 'C']);
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 
 	it('should secure model without default secure', () => {
@@ -45,7 +50,8 @@ describe('secure', () => {
 					assert.lengthOf(stores, 2);
 					assert.sameDeepMembers(stores.map(s => s.name), ['B', 'C']);
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 
 	it('should skip secure for admin with getCurrentSubjects', () => {
@@ -63,7 +69,8 @@ describe('secure', () => {
 					assert.lengthOf(stores, 3);
 					assert.sameDeepMembers(stores.map(s => s.name), ['A', 'B', 'C']);
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 
 	it('should skip secure for admin with userIn in options', () => {
@@ -91,7 +98,7 @@ describe('secure', () => {
 						});
 					});
 			});
-		});
+		}).finally(() => acl.unsecure(Store));
 	});
 
 	it('should remove subject permission from models', () => {
@@ -117,7 +124,8 @@ describe('secure', () => {
 					assert.lengthOf(stores, 1);
 					assert.sameDeepMembers(stores.map(s => s.name), ['B']);
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 
 	it('should ignore secure default when the request is being made against a single model instance', () => {
@@ -134,7 +142,8 @@ describe('secure', () => {
 					assert.ok(store);
 					assert.equal(store.name, 'A');
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 
 	it('should apply secure for "secure=true" when the request is being made against a single model instance', () => {
@@ -150,6 +159,7 @@ describe('secure', () => {
 				return Store.findById('A', {}, {userId: 'tom', secure: true}).then(store => {
 					assert.notOk(store);
 				});
-			});
+			})
+			.finally(() => acl.unsecure(Store));
 	});
 });
