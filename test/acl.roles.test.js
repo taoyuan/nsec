@@ -103,6 +103,16 @@ describe('acl/roles', () => {
 		});
 	});
 
+	it('should get roles parent ids', () => {
+		return createInheritedRoles(acl.scoped()).then(([A, B, C, D, ABC, BCD]) => {
+			return acl.getParentRoleIds([ABC, BCD]).then(parentIds => {
+				return acl.models.SecRole.find({where: {name: {inq: ['A', 'B', 'C', 'D']}}}).then(parents => {
+					assert.sameDeepMembers(parents.map(p => p.id), parentIds);
+				});
+			});
+		});
+	});
+
 	it('should recurse parents ', () => {
 		return createInheritedRoles(acl.scoped()).then(([A, B, C, D, ABC, BCD, ABCD]) => {
 			return acl.recurseParentRoleIds(ABCD).then(parentIds => {

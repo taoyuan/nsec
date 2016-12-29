@@ -27,6 +27,7 @@ class Acl {
 	 * @param {Object|String} [opts.datasource]
 	 * @param {Object|String} [opts.ds]
 	 * @param {Object} [opts.models]
+	 * @param {Function} [opts.currentUser]
 	 *
 	 */
 	constructor(ds, opts) {
@@ -42,6 +43,7 @@ class Acl {
 		this._scope = opts.scope;
 		this._scopeId = opts.scopeId;
 		this._models = opts.models ? opts.models : modeler.load(opts);
+		this._currentUser = opts.currentUser || _.noop;
 
 		this.roles = new Roles(this);
 		permissible(this, opts);
@@ -95,7 +97,14 @@ class Acl {
 
 	getCurrentUserId(options) {
 		options = options || {};
-		return _.get(options, 'accessToken.userId') || _.get(options, 'user.id') || options.userId;
+		const user = this._currentUser(options);
+		if (_.isString(user)) {
+			return user;
+		} else if (_.isString(_.get(user, 'id'))) {
+			return user.id;
+		} else {
+			return _.get(options, 'accessToken.userId') || options.userId || _.get(options, 'user.id') || options.user;
+		}
 	}
 
 	// ------------------------

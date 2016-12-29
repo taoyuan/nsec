@@ -6,17 +6,17 @@ const nsec = require('..');
 
 const s = require('./support');
 
-describe('acl/canable', () => {
+describe('acl/permissible', () => {
 	describe('with dirty', () => {
-		itCanable(true);
+		itPermissible(true);
 	});
 
 	describe('without dirty', () => {
-		itCanable(false);
+		itPermissible(false);
 	});
 });
 
-function itCanable(dirty) {
+function itPermissible(dirty) {
 	let acl;
 	let product;
 	let tom;
