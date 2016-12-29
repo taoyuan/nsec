@@ -288,11 +288,13 @@ class Roles {
 		});
 	}
 
-	findUserRoleMappings(user) {
+	findUserRoleMappings(user, filter) {
 		user = arrify(user).map(u => normalize(u)).filter(_.identity);
 		const {SecRoleMapping} = this.acl.models;
 		const where = this._withScope({userId: {inq: user}});
-		return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb));
+		filter = filter || {};
+		filter.where = filter.where ? {and: [filter.where, where]} : where;
+		return PromiseA.fromCallback(cb => SecRoleMapping.find(filter, cb));
 	}
 
 	/**

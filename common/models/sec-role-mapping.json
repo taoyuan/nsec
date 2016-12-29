@@ -23,6 +23,12 @@
 		"scopeId": {
 			"type": "string",
 			"index": true
+		},
+		"state": {
+			"type": "string",
+			"index": true,
+			"default": "active",
+			"comment": "The role membership state. Could be 'active' and 'pending'"
 		}
 	},
 	"relations": {
