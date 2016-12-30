@@ -179,6 +179,29 @@ describe('acl/roles', () => {
 		});
 	});
 
+	it('should assign multiple memberships for same user different scopes', () => {
+		const scoped1 = acl.scoped('Foo:1');
+		const scoped2 = acl.scoped('Bar:2');
+
+		return Promise.all([
+			createInheritedRoles(scoped1),
+			createInheritedRoles(scoped2)
+		]).then(([[A1], [A2]]) => {
+			return Promise.all([
+				scoped1.assignMemberships('Tom', A1),
+				scoped2.assignMemberships('Tom', A2),
+			]).then(() => acl.scoped('*').findMemberships('Tom', '*'))
+				.then(memberships => {
+					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
+					assert.lengthOf(memberships, 2);
+					assert.sameDeepMembers(memberships, [
+						{roleId: A1.id, scope: 'Foo', scopeId: '1', userId: 'Tom', state: 'pending'},
+						{roleId: A2.id, scope: 'Bar', scopeId: '2', userId: 'Tom', state: 'pending'},
+					]);
+				});
+		});
+	});
+
 	it('should reassign membership to change role', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B]) => {
