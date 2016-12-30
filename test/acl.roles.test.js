@@ -121,7 +121,23 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should assign user roles', () => {
+	it('should assign one membership', () => {
+		const scoped = acl.scoped('Store:123');
+		return createInheritedRoles(scoped).then(([A]) => {
+			return scoped.assignMembership('Tom', A).then(m => {
+				assert.isObject(m);
+				assert.deepEqual(_.omit(m.toJSON(), 'id'), {
+					roleId: A.id,
+					scope: 'Store',
+					scopeId: '123',
+					userId: 'Tom',
+					state: 'pending'
+				});
+			});
+		});
+	});
+
+	it('should assign memberships', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
@@ -135,7 +151,7 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should assign user roles with null scope', () => {
+	it('should assign memberships with null scope', () => {
 		const scoped = acl.scoped();
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
@@ -163,7 +179,7 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should unassign user roles', () => {
+	it('should unassign memberships', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C]).then(() => {

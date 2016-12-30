@@ -160,6 +160,10 @@ class Acl {
 		return this.roles.recurseParentRoleIds(...arguments);
 	}
 
+	assignMembership(user, role, state) {
+		return this.roles.assignMembership(...arguments);
+	}
+
 	assignMemberships(users, roles, state) {
 		return this.roles.assignMemberships(...arguments);
 	}

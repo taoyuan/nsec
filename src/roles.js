@@ -220,8 +220,12 @@ class Roles {
 	}
 
 	//----------------------------------------------
-	// SecRole Mappings
+	// Memberships
 	//----------------------------------------------
+
+	assignMembership(user, role, state) {
+		return this.assignMemberships(user, role, state).then(memberships => memberships[0]);
+	}
 
 	/**
 	 * Assign roles to users
