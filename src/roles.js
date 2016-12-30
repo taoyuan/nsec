@@ -231,7 +231,7 @@ class Roles {
 	 * @param {String} [state] state `pending` or `active`
 	 * @return {Promise.<[SecMembership]>}
 	 */
-	assignMemberships(users, roles, state = 'pending') {
+	assignMemberships(users, roles, state) {
 		const proles = this.resolveRoles(roles);
 		users = arrify(users).map(u => normalize(u)).filter(_.identity);
 
@@ -254,9 +254,10 @@ class Roles {
 				return PromiseA.resolve([]);
 			}
 
-			return PromiseA.map(items, item => {
-				return SecMembership.upsertWithWhere({userId: item.userId, roleId: item.roleId}, item);
-			});
+			return PromiseA.map(items, item => SecMembership.upsertWithWhere({
+				userId: item.userId,
+				roleId: item.roleId
+			}, item));
 		});
 	}
 
