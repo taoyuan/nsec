@@ -126,10 +126,10 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
 				assert.lengthOf(mappings, 3);
-				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
-					{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
-					{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom'}
+				assert.sameDeepMembers(mappings.map(m => _.omit(m.toJSON(), 'id')), [
+					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'},
+					{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'},
+					{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'}
 				]);
 			});
 		});
@@ -141,9 +141,9 @@ describe('acl/roles', () => {
 			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom'},
-					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom'},
-					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom'}
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
+					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
+					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'}
 				]);
 			});
 		});
@@ -157,8 +157,8 @@ describe('acl/roles', () => {
 					assert.deepEqual(info, {count: 1});
 					return acl.models.SecRoleMapping.find().then(mappings => {
 						assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
-							{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom'},
-							{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom'}
+							{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'},
+							{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'}
 						]);
 					});
 				});

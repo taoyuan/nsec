@@ -252,7 +252,9 @@ class Roles {
 				return PromiseA.resolve([]);
 			}
 
-			return PromiseA.fromCallback(cb => SecRoleMapping.create(items, cb));
+			return PromiseA.map(items, item => {
+				return SecRoleMapping.upsertWithWhere({userId: item.userId, roleId: item.roleId}, item);
+			});
 		});
 	}
 
