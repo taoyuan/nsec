@@ -81,8 +81,8 @@ describe('secure', () => {
 			acl.addRole({name: 'admin'})
 		]).then(([member, admin]) => {
 			return PromiseA.all([
-				acl.assignMemberships(member, ['Tom', 'Jerry']),
-				acl.assignMemberships(admin, ['Sam'])
+				acl.assignMemberships(['Tom', 'Jerry'], member),
+				acl.assignMemberships(['Sam'], admin)
 			]).then(() => {
 				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
 					.then(([storeA, storeB, storeC]) => {

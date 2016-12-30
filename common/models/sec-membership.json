@@ -1,5 +1,5 @@
 {
-	"name": "SecRoleMapping",
+	"name": "SecMembership",
 	"properties": {
 		"id": {
 			"type": "string",

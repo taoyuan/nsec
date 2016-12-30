@@ -32,7 +32,7 @@
 		},
 		"mappings": {
 			"type": "hasMany",
-			"model": "SecRoleMapping",
+			"model": "SecMembership",
 			"foreignKey": "roleId"
 		}
 	}

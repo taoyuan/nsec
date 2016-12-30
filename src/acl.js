@@ -160,24 +160,20 @@ class Acl {
 		return this.roles.recurseParentRoleIds(...arguments);
 	}
 
-	assignMemberships(roles, users) {
+	assignMemberships(users, roles) {
 		return this.roles.assignMemberships(...arguments);
 	}
 
-	assignRolesUsers(roles, users) {
-		return this.assignMemberships(...arguments);
-	}
-
-	unassignMemberships(roles, users) {
+	unassignMemberships(users, roles) {
 		return this.roles.unassignMemberships(...arguments);
 	}
 
-	unassignRolesUsers(roles, users) {
-		return this.unassignMemberships(...arguments);
+	approveMembership(user, role, state, filter) {
+		return this.roles.approveMembership(...arguments);
 	}
 
-	findUserRoleMappings(user) {
-		return this.roles.findUserRoleMappings(...arguments);
+	findMemberships(users, roles, state, filter) {
+		return this.roles.findMemberships(...arguments);
 	}
 
 	findUserRoles(user, recursively) {

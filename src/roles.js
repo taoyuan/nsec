@@ -76,7 +76,7 @@ class Roles {
 			schema.apply('where', where);
 		}
 
-		const {SecRole, SecRoleMapping} = this.acl.models;
+		const {SecRole, SecMembership} = this.acl.models;
 		return SecRole.find({where, fields: ['id']}).then(ids => {
 			if (_.isEmpty(ids)) {
 				return {count: 0};
@@ -84,7 +84,7 @@ class Roles {
 			// TODO transaction ?
 			return PromiseA.resolve()
 			// Remove all related mappings
-				.then(() => SecRoleMapping.destroyAll({roleId: {inq: ids}}))
+				.then(() => SecMembership.destroyAll({roleId: {inq: ids}}))
 				.then(() => SecRole.destroyAll(where, options));
 		});
 	}
@@ -226,16 +226,16 @@ class Roles {
 	/**
 	 * Assign roles to users
 	 *
-	 * @param {SecRole|String|[SecRole]|[String]} roles
 	 * @param {String|[String]} users
+	 * @param {SecRole|String|[SecRole]|[String]} roles
 	 * @param {String} [state] state `pending` or `active`
-	 * @return {Promise.<[SecRoleMapping]>}
+	 * @return {Promise.<[SecMembership]>}
 	 */
-	assignMemberships(roles, users, state = 'pending') {
+	assignMemberships(users, roles, state = 'pending') {
 		const proles = this.resolveRoles(roles);
 		users = arrify(users).map(u => normalize(u)).filter(_.identity);
 
-		const {SecRoleMapping} = this.acl.models;
+		const {SecMembership} = this.acl.models;
 
 		// resolve and filter roles according scope
 		// noinspection JSValidateTypes
@@ -255,7 +255,7 @@ class Roles {
 			}
 
 			return PromiseA.map(items, item => {
-				return SecRoleMapping.upsertWithWhere({userId: item.userId, roleId: item.roleId}, item);
+				return SecMembership.upsertWithWhere({userId: item.userId, roleId: item.roleId}, item);
 			});
 		});
 	}
@@ -263,20 +263,20 @@ class Roles {
 	/**
 	 * Unassign roles with users
 	 *
-	 * @param {SecRole|String|[SecRole]|[String]} roles
 	 * @param {String|[String]} users
+	 * @param {SecRole|String|[SecRole]|[String]} roles
 	 * @return {{count: Number}}
 	 */
-	unassignMemberships(roles, users) {
+	unassignMemberships(users, roles) {
 		// resolve and filter roles according scope
-		if (roles !== '*') {
-			roles = this.resolveRoles(roles).map(role => role.id);
-		}
 		if (users !== '*') {
 			users = arrify(users).map(u => normalize(u)).filter(_.identity);
 		}
+		if (roles !== '*') {
+			roles = this.resolveRoles(roles).map(role => role.id);
+		}
 
-		const {SecRoleMapping} = this.acl.models;
+		const {SecMembership} = this.acl.models;
 
 		// noinspection JSValidateTypes
 		return PromiseA.all([roles, users]).then(([roles, users]) => {
@@ -288,25 +288,55 @@ class Roles {
 				where.userId = {inq: users};
 			}
 
-			return PromiseA.fromCallback(cb => SecRoleMapping.destroyAll(where, cb));
+			return PromiseA.fromCallback(cb => SecMembership.destroyAll(where, cb));
 		});
 	}
 
-	approveMembership(role, user) {
-
+	approveMembership(user, role) {
+		return this.findMemberships(user, role).map(m => m.updateAttributes({state: 'active'}));
 	}
 
-	findMemberships(user, role, state) {
+	findMemberships(users, roles, state, filter) {
+		if (_.isObject(state)) {
+			filter = state;
+			state = undefined;
+		}
+		users = users || null;
+		roles = roles || null;
 
+		if (users !== '*') {
+			users = arrify(users).map(u => normalize(u)).filter(_.identity);
+		}
+
+		if (roles !== '*') {
+			roles = this.resolveRoles(roles).map(role => role.id);
+		}
+
+		return PromiseA.all([roles, users]).then(([roles, users]) => {
+			let where = {state};
+			if (roles !== '*') {
+				where.roleId = {inq: roles};
+			}
+			if (users !== '*') {
+				where.userId = {inq: users};
+			}
+
+			where = this._withScope(where);
+
+			const {SecMembership} = this.acl.models;
+			filter = filter || {};
+			filter.where = filter.where ? {and: [filter.where, where]} : where;
+			return PromiseA.fromCallback(cb => SecMembership.find(filter, cb));
+		});
 	}
 
 	findUserRoleMappings(user, filter) {
 		user = arrify(user).map(u => normalize(u)).filter(_.identity);
-		const {SecRoleMapping} = this.acl.models;
+		const {SecMembership} = this.acl.models;
 		const where = this._withScope({userId: {inq: user}});
 		filter = filter || {};
 		filter.where = filter.where ? {and: [filter.where, where]} : where;
-		return PromiseA.fromCallback(cb => SecRoleMapping.find(filter, cb));
+		return PromiseA.fromCallback(cb => SecMembership.find(filter, cb));
 	}
 
 	/**
@@ -317,7 +347,10 @@ class Roles {
 	 * @return {Promise.<[String]>}
 	 */
 	findUserRoles(user, recursively) {
-		const promise = this.findUserRoleMappings(user).map(m => m.roleId).then(roleIds => this.resolveRoles(roleIds));
+		const promise = this.findMemberships(user, '*', 'active')
+			.map(m => m.roleId)
+			.then(roleIds => this.resolveRoles(roleIds));
+
 		if (recursively) {
 			// noinspection JSValidateTypes
 			return promise.then(roles => this.recurseParentRoles(roles)
@@ -335,7 +368,7 @@ class Roles {
 	 * @return {Promise}
 	 */
 	findRoleUsers(role) {
-		const {SecRoleMapping} = this.acl.models;
+		const {SecMembership} = this.acl.models;
 
 		let promise = PromiseA.resolve();
 		if (role && role !== '*' && role !== 'all') {
@@ -348,7 +381,7 @@ class Roles {
 
 		return promise.then(where => {
 			where = this._withScope(where);
-			return PromiseA.fromCallback(cb => SecRoleMapping.find({where}, cb)).map(m => m.userId).then(_.uniq);
+			return PromiseA.fromCallback(cb => SecMembership.find({where}, cb)).map(m => m.userId).then(_.uniq);
 		});
 	}
 
@@ -360,12 +393,12 @@ class Roles {
 	 */
 	hasRoles(user, roles) {
 		user = normalize(user);
-		const {SecRoleMapping} = this.acl.models;
+		const {SecMembership} = this.acl.models;
 		return this.resolveRoles(roles).map(role => role.id).then(roles => {
 			if (!user || _.isEmpty(roles)) {
 				return PromiseA.resolve(false);
 			}
-			return SecRoleMapping.count(this._withScope({
+			return SecMembership.count(this._withScope({
 				userId: user,
 				roleId: {inq: roles}
 			})).then(c => c === roles.length);
