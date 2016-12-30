@@ -124,7 +124,7 @@ describe('acl/roles', () => {
 	it('should assign user roles', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
+			return scoped.assignMemberships([A, B, C], 'Tom', 'active').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.sameDeepMembers(mappings.map(m => _.omit(m.toJSON(), 'id')), [
 					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'active'},
@@ -138,7 +138,7 @@ describe('acl/roles', () => {
 	it('should assign user roles with null scope', () => {
 		const scoped = acl.scoped();
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignRolesUsers([A, B, C], 'Tom').then(mappings => {
+			return scoped.assignMemberships([A, B, C], 'Tom', 'active').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
 					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
@@ -152,8 +152,8 @@ describe('acl/roles', () => {
 	it('should unassign user roles', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignRolesUsers([A, B, C], 'Tom').then(() => {
-				return scoped.unassignRolesUsers(A, 'Tom').then(info => {
+			return scoped.assignMemberships([A, B, C], 'Tom', 'active').then(() => {
+				return scoped.unassignMemberships(A, 'Tom').then(info => {
 					assert.deepEqual(info, {count: 1});
 					return acl.models.SecRoleMapping.find().then(mappings => {
 						assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
@@ -176,17 +176,17 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y3)
 		]).then(([[X1A, X1B, X1C], [X2A, X2B, X2C], [Y3A, Y3B, Y3C]]) => {
 			return Promise.all([
-				X1.assignRolesUsers(X1A, ['Tom', 'Jerry']),
-				X1.assignRolesUsers(X1B, ['Tom', 'Dean', 'Sam']),
-				X1.assignRolesUsers(X1C, ['Merlin']),
+				X1.assignMemberships(X1A, ['Tom', 'Jerry']),
+				X1.assignMemberships(X1B, ['Tom', 'Dean', 'Sam']),
+				X1.assignMemberships(X1C, ['Merlin']),
 
-				X2.assignRolesUsers(X2A, ['Tom', 'Jerry']),
-				X2.assignRolesUsers(X2B, ['Tom', 'Dean', 'Sam']),
-				X2.assignRolesUsers(X2C, ['Merlin']),
+				X2.assignMemberships(X2A, ['Tom', 'Jerry']),
+				X2.assignMemberships(X2B, ['Tom', 'Dean', 'Sam']),
+				X2.assignMemberships(X2C, ['Merlin']),
 
-				Y3.assignRolesUsers(Y3A, ['Tom', 'Jerry']),
-				Y3.assignRolesUsers(Y3B, ['Tom', 'Dean', 'Sam']),
-				Y3.assignRolesUsers(Y3C, ['Merlin'])
+				Y3.assignMemberships(Y3A, ['Tom', 'Jerry']),
+				Y3.assignMemberships(Y3B, ['Tom', 'Dean', 'Sam']),
+				Y3.assignMemberships(Y3C, ['Merlin'])
 			]).then(() => {
 				return acl.scoped('X').findUserRoleMappings('Tom').then(mappings => {
 					assert.lengthOf(mappings, 4);
@@ -204,12 +204,12 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
 			return Promise.all([
-				X.assignRolesUsers(XA, ['Tom', 'Jerry']),
-				X.assignRolesUsers(XB, ['Tom', 'Dean', 'Sam']),
-				X.assignRolesUsers(XC, ['Merlin']),
-				Y.assignRolesUsers(YA, ['Tom', 'Jerry']),
-				Y.assignRolesUsers(YB, ['Tom', 'Dean', 'Sam']),
-				Y.assignRolesUsers(YC, ['Merlin'])
+				X.assignMemberships(XA, ['Tom', 'Jerry']),
+				X.assignMemberships(XB, ['Tom', 'Dean', 'Sam']),
+				X.assignMemberships(XC, ['Merlin']),
+				Y.assignMemberships(YA, ['Tom', 'Jerry']),
+				Y.assignMemberships(YB, ['Tom', 'Dean', 'Sam']),
+				Y.assignMemberships(YC, ['Merlin'])
 			]).then(() => {
 				return X.findUserRoles('Tom').then(roles => {
 					assert.lengthOf(roles, 2);
@@ -232,13 +232,13 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC, XD, XABC], [YA, YB, YC]]) => {
 			return Promise.all([
-				X.assignRolesUsers(XA, ['Tom', 'Jerry']),
-				X.assignRolesUsers(XB, ['Tom', 'Dean', 'Sam']),
-				X.assignRolesUsers(XC, ['Merlin']),
-				X.assignRolesUsers(XABC, ['Merlin']),
-				Y.assignRolesUsers(YA, ['Tom', 'Jerry']),
-				Y.assignRolesUsers(YB, ['Tom', 'Dean', 'Sam']),
-				Y.assignRolesUsers(YC, ['Merlin'])
+				X.assignMemberships(XA, ['Tom', 'Jerry']),
+				X.assignMemberships(XB, ['Tom', 'Dean', 'Sam']),
+				X.assignMemberships(XC, ['Merlin']),
+				X.assignMemberships(XABC, ['Merlin']),
+				Y.assignMemberships(YA, ['Tom', 'Jerry']),
+				Y.assignMemberships(YB, ['Tom', 'Dean', 'Sam']),
+				Y.assignMemberships(YC, ['Merlin'])
 			]).then(() => {
 				return X.findUserRoles('Merlin', true).then(roles => {
 					assert.lengthOf(roles, 4);
@@ -256,12 +256,12 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
 			return Promise.all([
-				X.assignRolesUsers(XA, ['Tom', 'Jerry']),
-				X.assignRolesUsers(XB, ['Tom', 'Dean', 'Sam']),
-				X.assignRolesUsers(XC, ['Merlin']),
-				Y.assignRolesUsers(YA, ['Tom', 'Jerry']),
-				Y.assignRolesUsers(YB, ['Tom', 'Dean', 'Sam']),
-				Y.assignRolesUsers(YC, ['Merlin'])
+				X.assignMemberships(XA, ['Tom', 'Jerry']),
+				X.assignMemberships(XB, ['Tom', 'Dean', 'Sam']),
+				X.assignMemberships(XC, ['Merlin']),
+				Y.assignMemberships(YA, ['Tom', 'Jerry']),
+				Y.assignMemberships(YB, ['Tom', 'Dean', 'Sam']),
+				Y.assignMemberships(YC, ['Merlin'])
 			]).then(() => {
 				return X.findRoleUsers(XB).then(users => {
 					assert.lengthOf(users, 3);
@@ -294,12 +294,12 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
 			return Promise.all([
-				X.assignRolesUsers(XA, ['Tom', 'Jerry']),
-				X.assignRolesUsers(XB, ['Tom', 'Dean', 'Sam']),
-				X.assignRolesUsers(XC, ['Merlin']),
-				Y.assignRolesUsers(YA, ['Tom', 'Jerry']),
-				Y.assignRolesUsers(YB, ['Tom', 'Dean', 'Sam']),
-				Y.assignRolesUsers(YC, ['Merlin'])
+				X.assignMemberships(XA, ['Tom', 'Jerry']),
+				X.assignMemberships(XB, ['Tom', 'Dean', 'Sam']),
+				X.assignMemberships(XC, ['Merlin']),
+				Y.assignMemberships(YA, ['Tom', 'Jerry']),
+				Y.assignMemberships(YB, ['Tom', 'Dean', 'Sam']),
+				Y.assignMemberships(YC, ['Merlin'])
 			]).then(() => {
 				return Promise.all([
 					X.hasRoles('Tom', [XA, XB]),
@@ -319,12 +319,12 @@ describe('acl/roles', () => {
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
 			return Promise.all([
-				X.assignRolesUsers(XA, ['Tom', 'Jerry']),
-				X.assignRolesUsers(XB, ['Tom', 'Dean', 'Sam']),
-				X.assignRolesUsers(XC, ['Merlin']),
-				Y.assignRolesUsers(YA, ['Tom', 'Jerry']),
-				Y.assignRolesUsers(YB, ['Dean', 'Sam']),
-				Y.assignRolesUsers(YC, ['Merlin'])
+				X.assignMemberships(XA, ['Tom', 'Jerry']),
+				X.assignMemberships(XB, ['Tom', 'Dean', 'Sam']),
+				X.assignMemberships(XC, ['Merlin']),
+				Y.assignMemberships(YA, ['Tom', 'Jerry']),
+				Y.assignMemberships(YB, ['Dean', 'Sam']),
+				Y.assignMemberships(YC, ['Merlin'])
 			]).then(() => {
 				return Promise.all([
 					X.hasRoles('Tom', ['A', 'B']),

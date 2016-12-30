@@ -160,12 +160,20 @@ class Acl {
 		return this.roles.recurseParentRoleIds(...arguments);
 	}
 
+	assignMemberships(roles, users) {
+		return this.roles.assignMemberships(...arguments);
+	}
+
 	assignRolesUsers(roles, users) {
-		return this.roles.assignRolesUsers(...arguments);
+		return this.assignMemberships(...arguments);
+	}
+
+	unassignMemberships(roles, users) {
+		return this.roles.unassignMemberships(...arguments);
 	}
 
 	unassignRolesUsers(roles, users) {
-		return this.roles.unassignRolesUsers(...arguments);
+		return this.unassignMemberships(...arguments);
 	}
 
 	findUserRoleMappings(user) {

@@ -228,9 +228,10 @@ class Roles {
 	 *
 	 * @param {SecRole|String|[SecRole]|[String]} roles
 	 * @param {String|[String]} users
+	 * @param {String} [state] state `pending` or `active`
 	 * @return {Promise.<[SecRoleMapping]>}
 	 */
-	assignRolesUsers(roles, users) {
+	assignMemberships(roles, users, state = 'pending') {
 		const proles = this.resolveRoles(roles);
 		users = arrify(users).map(u => normalize(u)).filter(_.identity);
 
@@ -245,7 +246,8 @@ class Roles {
 				userId,
 				roleId: role.id,
 				scope: role.scope,
-				scopeId: role.scopeId
+				scopeId: role.scopeId,
+				state
 			}))));
 
 			if (_.isEmpty(items)) {
@@ -265,7 +267,7 @@ class Roles {
 	 * @param {String|[String]} users
 	 * @return {{count: Number}}
 	 */
-	unassignRolesUsers(roles, users) {
+	unassignMemberships(roles, users) {
 		// resolve and filter roles according scope
 		if (roles !== '*') {
 			roles = this.resolveRoles(roles).map(role => role.id);
@@ -288,6 +290,14 @@ class Roles {
 
 			return PromiseA.fromCallback(cb => SecRoleMapping.destroyAll(where, cb));
 		});
+	}
+
+	approveMembership(role, user) {
+
+	}
+
+	findMemberships(user, role, state) {
+
 	}
 
 	findUserRoleMappings(user, filter) {

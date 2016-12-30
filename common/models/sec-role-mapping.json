@@ -27,7 +27,7 @@
 		"state": {
 			"type": "string",
 			"index": true,
-			"default": "active",
+			"default": "pending",
 			"comment": "The role membership state. Could be 'active' and 'pending'"
 		}
 	},
