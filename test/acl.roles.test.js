@@ -179,6 +179,26 @@ describe('acl/roles', () => {
 		});
 	});
 
+	it('should reassign membership to change role', () => {
+		const scoped = acl.scoped('Store:123');
+		return createInheritedRoles(scoped).then(([A, B]) => {
+			return Promise.each([
+				() => scoped.assignMembership('Tom', A).then(() => {
+					scoped.findMemberships('Tom', '*').then(memberships => {
+						assert.lengthOf(memberships, 1);
+						assert.equal(memberships[0].roleId, A.id);
+					});
+				}),
+				() => scoped.assignMembership('Tom', B).then(() => {
+					scoped.findMemberships('Tom', '*').then(memberships => {
+						assert.lengthOf(memberships, 1);
+						assert.equal(memberships[0].roleId, B.id);
+					});
+				})
+			], fn => fn());
+		});
+	});
+
 	it('should unassign memberships', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {

@@ -258,10 +258,7 @@ class Roles {
 				return PromiseA.resolve([]);
 			}
 
-			return PromiseA.map(items, item => SecMembership.upsertWithWhere({
-				userId: item.userId,
-				roleId: item.roleId
-			}, item));
+			return PromiseA.map(items, item => SecMembership.upsertWithWhere({userId: item.userId}, item));
 		});
 	}
 
