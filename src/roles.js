@@ -298,22 +298,23 @@ class Roles {
 		return PromiseA.fromCallback(cb => SecMembership.destroyAll(where, cb));
 	}
 
-	updateMemberships(where, {role, state}) {
-		let userId, roleId;
+	updateMembership(where, {role, state}) {
 		if (_.isString(where)) {
-			userId = where;
-		} else if (_.isObject(where)) {
-			userId = unwrap(where.userId || where.user);
-			roleId = unwrap(where.roleId || where.role);
-		} else {
-			throw new Error('`where` must be a string or an object contains `user` or `userId` prop at least');
+			where = {user: where};
+		}
+		return this.updateMemberships(where, {role, state}).then(memberships => memberships[0]);
+	}
+
+	updateMemberships(where, {role, state}) {
+		if (_.isString(where) || Array.isArray(where)) {
+			where = {users: where};
 		}
 
 		const data = {state: this.normalizeMembershipState(state)};
 		if (role) {
 			data.roleId = unwrap(role);
 		}
-		return this.findMemberships({userId, roleId}).map(m => m && m.updateAttributes(data));
+		return this.findMemberships(where).map(m => m && m.updateAttributes(data));
 	}
 
 	findMemberships(where, filter) {

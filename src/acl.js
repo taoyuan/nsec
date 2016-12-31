@@ -172,6 +172,10 @@ class Acl {
 		return this.roles.unassignMemberships(...arguments);
 	}
 
+	updateMembership(where, data) {
+		return this.roles.updateMembership(...arguments);
+	}
+
 	updateMemberships(where, data) {
 		return this.roles.updateMemberships(...arguments);
 	}

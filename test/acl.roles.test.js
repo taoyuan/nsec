@@ -239,11 +239,29 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should approve membership from state pending to avtive', () => {
+	it('should update multiple memberships from state pending to active', () => {
 		const scoped = acl.scoped();
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C])
-				.then(() => scoped.updateMemberships({user: 'Tom', role: B}, {state: 'active'}))
+				.then(() => scoped.updateMemberships({user: 'Tom', roles: [A, B]}, {state: 'active'}))
+				.then(() => scoped.findMemberships({user: 'Tom'}))
+				.then(memberships => {
+					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
+					assert.lengthOf(memberships, 3);
+					assert.sameDeepMembers(memberships, [
+						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
+						{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
+						{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
+					]);
+				});
+		});
+	});
+
+	it('should update one membership from state pending to active', () => {
+		const scoped = acl.scoped();
+		return createInheritedRoles(scoped).then(([A, B, C]) => {
+			return scoped.assignMemberships('Tom', [A, B, C])
+				.then(() => scoped.updateMembership({user: 'Tom', role: B}, {state: 'active'}))
 				.then(() => scoped.findMemberships({user: 'Tom'}))
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
