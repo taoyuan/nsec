@@ -331,22 +331,20 @@ class Roles {
 		}
 		state = this.normalizeMembershipState(state);
 
-		return PromiseA.all([roles, users]).then(([roles, users]) => {
-			let where = {state};
-			if (!_.isEmpty(roles)) {
-				where.roleId = {inq: roles};
-			}
-			if (!_.isEmpty(users)) {
-				where.userId = {inq: users};
-			}
+		where = {state};
+		if (!_.isEmpty(roles)) {
+			where.roleId = {inq: roles};
+		}
+		if (!_.isEmpty(users)) {
+			where.userId = {inq: users};
+		}
 
-			where = this._withScope(where);
+		where = this._withScope(where);
 
-			const {SecMembership} = this.acl.models;
-			filter = filter || {};
-			filter.where = filter.where ? {and: [filter.where, where]} : where;
-			return PromiseA.fromCallback(cb => SecMembership.find(filter, cb));
-		});
+		const {SecMembership} = this.acl.models;
+		filter = filter || {};
+		filter.where = filter.where ? {and: [filter.where, where]} : where;
+		return PromiseA.fromCallback(cb => SecMembership.find(filter, cb));
 	}
 
 	findMembership(where, filter) {
