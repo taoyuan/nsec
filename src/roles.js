@@ -222,6 +222,12 @@ class Roles {
 	//----------------------------------------------
 	// Memberships
 	//----------------------------------------------
+	normalizeMembershipState(state) {
+		if (!['pending', 'active'].includes(state)) {
+			state = undefined;
+		}
+		return state;
+	}
 
 	assignMembership(user, role, state) {
 		return this.assignMemberships(user, role, state).then(memberships => memberships[0]);
@@ -294,32 +300,46 @@ class Roles {
 		});
 	}
 
-	approveMembership(user, role) {
-		return this.findMemberships(user, role).map(m => m.updateAttributes({state: 'active'}));
+	updateMemberships(where, {role, state}) {
+		let userId, roleId;
+		if (_.isString(where)) {
+			userId = where;
+		} else if (_.isObject(where)) {
+			userId = where.userId || normalize(where.user);
+			roleId = where.roleId || normalize(where.role);
+		} else {
+			throw new Error('`where` must be a string or an object contains `user` or `userId` prop at least');
+		}
+		if (role) {
+			role = this.resolveRoles(role);
+		}
+
+		state = this.normalizeMembershipState(state);
+		return this.findMemberships({userId, roleId}).map(m => m && m.updateAttributes({role, state}));
 	}
 
-	findMemberships(users, roles, state, filter) {
-		if (_.isObject(state)) {
-			filter = state;
-			state = undefined;
+	findMemberships(where, filter) {
+		if (Array.isArray(where) || _.isString(where)) {
+			where = {users: where};
 		}
-		users = users || null;
-		roles = roles || null;
-
-		if (users !== '*') {
+		let {users, user, userId, roles, role, roleId, state} = where;
+		users = users || user || userId;
+		roles = roles || role || roleId;
+		if (users && users !== '*') {
 			users = arrify(users).map(u => normalize(u)).filter(_.identity);
 		}
 
-		if (roles !== '*') {
+		if (roles && roles !== '*') {
 			roles = this.resolveRoles(roles).map(role => role.id);
 		}
+		state = this.normalizeMembershipState(state);
 
 		return PromiseA.all([roles, users]).then(([roles, users]) => {
 			let where = {state};
-			if (roles !== '*') {
+			if (!_.isEmpty(roles)) {
 				where.roleId = {inq: roles};
 			}
-			if (users !== '*') {
+			if (!_.isEmpty(users)) {
 				where.userId = {inq: users};
 			}
 
@@ -332,13 +352,21 @@ class Roles {
 		});
 	}
 
-	findUserRoleMappings(user, filter) {
-		user = arrify(user).map(u => normalize(u)).filter(_.identity);
+	findMembership(where, filter) {
+		let userId, roleId;
+		if (_.isString(where)) {
+			userId = where;
+		} else if (_.isObject(where)) {
+			userId = where.userId || normalize(where.user);
+			roleId = where.roleId || normalize(where.role);
+		} else {
+			throw new Error('`where` must be a string or an object contains `user` or `userId` prop at least');
+		}
 		const {SecMembership} = this.acl.models;
-		const where = this._withScope({userId: {inq: user}});
+		where = this._withScope({userId, roleId});
 		filter = filter || {};
 		filter.where = filter.where ? {and: [filter.where, where]} : where;
-		return PromiseA.fromCallback(cb => SecMembership.find(filter, cb));
+		return PromiseA.fromCallback(cb => SecMembership.findOne(filter, cb));
 	}
 
 	/**
@@ -349,7 +377,7 @@ class Roles {
 	 * @return {Promise.<[String]>}
 	 */
 	findUserRoles(user, recursively) {
-		const promise = this.findMemberships(user, '*', 'active')
+		const promise = this.findMemberships({user, state: 'active'})
 			.map(m => m.roleId)
 			.then(roleIds => this.resolveRoles(roleIds));
 
@@ -413,6 +441,5 @@ module.exports = Roles;
 // Internal Functions
 function normalize(target, prop) {
 	prop = prop || 'id';
-	target = target || '';
-	return _.isString(target) ? target : target[prop];
+	return target && (_.isString(target) ? target : target[prop]);
 }

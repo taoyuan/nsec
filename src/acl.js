@@ -172,11 +172,15 @@ class Acl {
 		return this.roles.unassignMemberships(...arguments);
 	}
 
-	approveMembership(user, role, state, filter) {
-		return this.roles.approveMembership(...arguments);
+	updateMemberships(where, data) {
+		return this.roles.updateMemberships(...arguments);
 	}
 
-	findMemberships(users, roles, state, filter) {
+	findMembership(where, filter) {
+		return this.roles.findMembership(...arguments);
+	}
+
+	findMemberships(where, filter) {
 		return this.roles.findMemberships(...arguments);
 	}
 

@@ -190,7 +190,7 @@ describe('acl/roles', () => {
 			return Promise.all([
 				scoped1.assignMemberships('Tom', A1),
 				scoped2.assignMemberships('Tom', A2),
-			]).then(() => acl.scoped('*').findMemberships('Tom', '*'))
+			]).then(() => acl.scoped('*').findMemberships({user: 'Tom'}))
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 2);
@@ -207,15 +207,15 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B]) => {
 			return Promise.each([
 				() => scoped.assignMembership('Tom', A).then(() => {
-					scoped.findMemberships('Tom', '*').then(memberships => {
-						assert.lengthOf(memberships, 1);
-						assert.equal(memberships[0].roleId, A.id);
+					scoped.findMembership({user: 'Tom'}).then(membership => {
+						assert.isObject(membership);
+						assert.equal(membership.roleId, A.id);
 					});
 				}),
 				() => scoped.assignMembership('Tom', B).then(() => {
-					scoped.findMemberships('Tom', '*').then(memberships => {
-						assert.lengthOf(memberships, 1);
-						assert.equal(memberships[0].roleId, B.id);
+					scoped.findMembership({user: 'Tom'}).then(membership => {
+						assert.isObject(membership);
+						assert.equal(membership.roleId, B.id);
 					});
 				})
 			], fn => fn());
@@ -243,8 +243,8 @@ describe('acl/roles', () => {
 		const scoped = acl.scoped();
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C])
-				.then(() => scoped.approveMembership('Tom', B))
-				.then(() => scoped.findMemberships('Tom', '*'))
+				.then(() => scoped.updateMemberships({user: 'Tom', role: B}, {state: 'active'}))
+				.then(() => scoped.findMemberships({user: 'Tom'}))
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 3);
@@ -279,7 +279,7 @@ describe('acl/roles', () => {
 				Y3.assignMemberships(['Tom', 'Dean', 'Sam'], Y3B),
 				Y3.assignMemberships(['Merlin'], Y3C)
 			]).then(() => {
-				return acl.scoped('X').findMemberships('Tom', '*').then(mappings => {
+				return acl.scoped('X').findMemberships({user: 'Tom'}).then(mappings => {
 					assert.lengthOf(mappings, 4);
 					assert.sameDeepMembers(mappings.map(r => r.roleId), [X1A.id, X1B.id, X2A.id, X2B.id]);
 				});
