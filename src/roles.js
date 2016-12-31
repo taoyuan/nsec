@@ -243,7 +243,7 @@ class Roles {
 	 */
 	assignMemberships(users, roles, state) {
 		const proles = this.resolveRoles(roles);
-		users = arrify(users).map(u => normalize(u)).filter(_.identity);
+		users = arrify(users).map(u => unwrap(u)).filter(_.identity);
 
 		const {SecMembership} = this.acl.models;
 
@@ -273,31 +273,29 @@ class Roles {
 	 *
 	 * @param {String|[String]} users
 	 * @param {SecRole|String|[SecRole]|[String]} roles
-	 * @return {{count: Number}}
+	 * @return {*}
 	 */
 	unassignMemberships(users, roles) {
 		// resolve and filter roles according scope
 		if (users !== '*') {
-			users = arrify(users).map(u => normalize(u)).filter(_.identity);
+			users = arrify(users).map(u => unwrap(u)).filter(_.identity);
 		}
 		if (roles !== '*') {
-			roles = this.resolveRoles(roles).map(role => role.id);
+			roles = arrify(roles).map(r => unwrap(r)).filter(_.identity);
 		}
 
 		const {SecMembership} = this.acl.models;
 
 		// noinspection JSValidateTypes
-		return PromiseA.all([roles, users]).then(([roles, users]) => {
-			const where = this._withScope();
-			if (roles !== '*' && !_.isEmpty(users)) {
-				where.roleId = {inq: roles};
-			}
-			if (users !== '*' && !_.isEmpty(users)) {
-				where.userId = {inq: users};
-			}
+		const where = this._withScope();
+		if (roles !== '*' && !_.isEmpty(users)) {
+			where.roleId = {inq: roles};
+		}
+		if (users !== '*' && !_.isEmpty(users)) {
+			where.userId = {inq: users};
+		}
 
-			return PromiseA.fromCallback(cb => SecMembership.destroyAll(where, cb));
-		});
+		return PromiseA.fromCallback(cb => SecMembership.destroyAll(where, cb));
 	}
 
 	updateMemberships(where, {role, state}) {
@@ -305,17 +303,17 @@ class Roles {
 		if (_.isString(where)) {
 			userId = where;
 		} else if (_.isObject(where)) {
-			userId = where.userId || normalize(where.user);
-			roleId = where.roleId || normalize(where.role);
+			userId = unwrap(where.userId || where.user);
+			roleId = unwrap(where.roleId || where.role);
 		} else {
 			throw new Error('`where` must be a string or an object contains `user` or `userId` prop at least');
 		}
-		if (role) {
-			role = this.resolveRoles(role);
-		}
 
-		state = this.normalizeMembershipState(state);
-		return this.findMemberships({userId, roleId}).map(m => m && m.updateAttributes({role, state}));
+		const data = {state: this.normalizeMembershipState(state)};
+		if (role) {
+			data.roleId = unwrap(role);
+		}
+		return this.findMemberships({userId, roleId}).map(m => m && m.updateAttributes(data));
 	}
 
 	findMemberships(where, filter) {
@@ -326,11 +324,10 @@ class Roles {
 		users = users || user || userId;
 		roles = roles || role || roleId;
 		if (users && users !== '*') {
-			users = arrify(users).map(u => normalize(u)).filter(_.identity);
+			users = arrify(users).map(u => unwrap(u)).filter(_.identity);
 		}
-
 		if (roles && roles !== '*') {
-			roles = this.resolveRoles(roles).map(role => role.id);
+			roles = arrify(roles).map(r => unwrap(r)).filter(_.identity);
 		}
 		state = this.normalizeMembershipState(state);
 
@@ -357,8 +354,8 @@ class Roles {
 		if (_.isString(where)) {
 			userId = where;
 		} else if (_.isObject(where)) {
-			userId = where.userId || normalize(where.user);
-			roleId = where.roleId || normalize(where.role);
+			userId = where.userId || unwrap(where.user);
+			roleId = where.roleId || unwrap(where.role);
 		} else {
 			throw new Error('`where` must be a string or an object contains `user` or `userId` prop at least');
 		}
@@ -422,7 +419,7 @@ class Roles {
 	 * @return {Promise.<Boolean>}
 	 */
 	hasRoles(user, roles) {
-		user = normalize(user);
+		user = unwrap(user);
 		const {SecMembership} = this.acl.models;
 		return this.resolveRoles(roles).map(role => role.id).then(roles => {
 			if (!user || _.isEmpty(roles)) {
@@ -439,7 +436,7 @@ class Roles {
 module.exports = Roles;
 
 // Internal Functions
-function normalize(target, prop) {
+function unwrap(target, prop) {
 	prop = prop || 'id';
 	return target && (_.isString(target) ? target : target[prop]);
 }
