@@ -1,3 +1,4 @@
+const debug = require('debug')('nsec:acl');
 const _ = require('lodash');
 const PromiseA = require('bluebird');
 const arrify = require('arrify');
@@ -37,7 +38,8 @@ module.exports = function (acl, opts) {
 		}).then(items => multiple ? items : items[0]);
 
 		function allow(target, key) {
-			const permissions = target[key] || [];
+			// target[key] may be a loopback List, can not cloneDeep directly
+			let permissions = _.map(target[key], _.cloneDeep);
 			_.forEach(subjects, subject => {
 				if (!subject) return;
 				let permission = _.find(permissions, p => p.subject === subject);
@@ -47,8 +49,8 @@ module.exports = function (acl, opts) {
 				}
 				permission.actions = _.union(permission.actions || [], actions);
 			});
-			target[key] = permissions;
-			return saveEntity(target);
+			// target[key] = permissions;
+			return update(target, key, permissions);
 		}
 	};
 
@@ -88,7 +90,8 @@ module.exports = function (acl, opts) {
 
 		function disallow(target, key) {
 			if (!target[key]) return;
-			const permissions = target[key];
+			// target[key] may be a loopback List, can not cloneDeep directly
+			let permissions = _.map(target[key], _.cloneDeep);
 			_.forEach(subjects, subject => {
 				if (!subject) return;
 				const permission = _.find(permissions, p => p.subject === subject);
@@ -100,10 +103,10 @@ module.exports = function (acl, opts) {
 					_.remove(permissions, p => p.subject === subject);
 				}
 				if (_.isEmpty(permissions)) {
-					target[key] = null;
+					permissions = null;
 				}
 			});
-			return saveEntity(target);
+			return update(target, key, permissions);
 		}
 	};
 
@@ -123,8 +126,8 @@ module.exports = function (acl, opts) {
 			}
 
 			// dirty mode
-			entity[property] = null;
-			return saveEntity(entity);
+			// entity[property] = null;
+			return update(entity, property, null);
 		}).then(items => multiple ? items : items[0]);
 	};
 
@@ -198,15 +201,14 @@ module.exports = function (acl, opts) {
 		}
 	}
 
-	function saveEntity(entity) {
-		if (!_.isFunction(entity.save)) {
+	// TODO update permission with a update version or update time restrict for concurrent execution
+	function update(entity, property, value) {
+		if (!_.isFunction(entity.updateAttribute)) {
+			entity[property] = value;
 			return entity;
 		}
 
-		if (entity.save.length > 0) {
-			return PromiseA.fromCallback(cb => entity.save(cb));
-		}
-		return entity.save();
+		return PromiseA.fromCallback(cb => entity.updateAttribute(property, value, cb));
 	}
 };
 
