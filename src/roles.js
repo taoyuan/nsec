@@ -48,6 +48,7 @@ class Roles {
 	 * @param {Object} [options]
 	 */
 	countRoles(where, options) {
+		where = where || {};
 		schema.apply('where', where);
 
 		const {SecRole} = this.acl.models;
@@ -66,6 +67,7 @@ class Roles {
 	 * @return {*}
 	 */
 	removeRoles(where, options) {
+		where = where || {};
 		if (this.acl.isScoped) {
 			schema.apply('argStrObj', where);
 			if (_.isString(where)) {
@@ -299,6 +301,7 @@ class Roles {
 	}
 
 	updateMembership(where, {role, state}) {
+		where = where || {};
 		if (_.isString(where)) {
 			where = {user: where};
 		}
@@ -306,6 +309,7 @@ class Roles {
 	}
 
 	updateMemberships(where, {role, state}) {
+		where = where || {};
 		if (_.isString(where) || Array.isArray(where)) {
 			where = {users: where};
 		}
@@ -318,6 +322,7 @@ class Roles {
 	}
 
 	findMemberships(where, filter) {
+		where = where || {};
 		if (Array.isArray(where) || _.isString(where)) {
 			where = {users: where};
 		}
@@ -349,6 +354,7 @@ class Roles {
 	}
 
 	findMembership(where, filter) {
+		where = where || {};
 		let userId, roleId;
 		if (_.isString(where)) {
 			userId = where;
