@@ -59,8 +59,8 @@ function secure(acl, Model, opts) {
 
 			const forceSecure = options.secure === true || options.skipSecure === false;
 
-			if (options.secure === false || options.skipSecure) {
-				debug('{secure: false} or {skipSecure: true} - skipping secure');
+			if (options.rowlevel === false || options.secure === false || options.skipSecure) {
+				debug('{secure: false} or {rowlevel: false} - skipping secure');
 				return next();
 			}
 
