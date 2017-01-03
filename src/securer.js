@@ -57,7 +57,7 @@ function secure(acl, Model, opts) {
 
 			const {query, options} = ctx;
 
-			if (opts.secure === false || options.secure === false) {
+			if (options.secure === false) {
 				debug('{secure: false} or {rowlevel: false} - skipping secure');
 				return next();
 			}

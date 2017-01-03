@@ -37,7 +37,7 @@ describe('secure', () => {
 
 	it('should secure model without default secure', () => {
 		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
-		acl.secure(Store, {secure: false});
+		acl.secure(Store);
 		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
 			.then(([storeA, storeB, storeC]) => {
 				return PromiseA.resolve()
