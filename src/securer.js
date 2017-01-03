@@ -57,12 +57,12 @@ function secure(acl, Model, opts) {
 
 			const {query, options} = ctx;
 
-			const forceSecure = options.secure === true || options.skipSecure === false;
-
-			if (options.rowlevel === false || options.secure === false || options.skipSecure) {
+			if (opts.secure === false || options.secure === false) {
 				debug('{secure: false} or {rowlevel: false} - skipping secure');
 				return next();
 			}
+
+			const forceSecure = options.secure === true;
 
 			if (operation === 'access') {
 				// Do not secure if the request is being made against a single model instance.

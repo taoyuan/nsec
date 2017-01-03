@@ -1,4 +1,3 @@
-const debug = require('debug')('nsec:acl');
 const _ = require('lodash');
 const PromiseA = require('bluebird');
 const arrify = require('arrify');
@@ -39,7 +38,7 @@ module.exports = function (acl, opts) {
 
 		function allow(target, key) {
 			// target[key] may be a loopback List, can not cloneDeep directly
-			let permissions = _.map(target[key], _.cloneDeep);
+			const permissions = _.map(target[key], _.cloneDeep);
 			_.forEach(subjects, subject => {
 				if (!subject) return;
 				let permission = _.find(permissions, p => p.subject === subject);
