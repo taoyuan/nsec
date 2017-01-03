@@ -1,6 +1,6 @@
 {
   "name": "nsec",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "A security library for nodejs with roles management and access control",
   "main": "./index.js",
   "jsnext:main": "./index.js",
