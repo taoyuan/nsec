@@ -17,7 +17,7 @@ describe('secure', () => {
 		return s.teardown();
 	});
 
-	it('should secure model with default secure', () => {
+	it('should secure model with default secure and row level filtering', () => {
 		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
 		acl.secure(Store);
 		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}, {secure: false})
@@ -37,7 +37,7 @@ describe('secure', () => {
 
 	it('should secure model without default secure', () => {
 		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
-		acl.secure(Store);
+		acl.secure(Store, {secure: false});
 		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
 			.then(([storeA, storeB, storeC]) => {
 				return PromiseA.resolve()
@@ -49,6 +49,25 @@ describe('secure', () => {
 				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}, {secure: true}).then(stores => {
 					assert.lengthOf(stores, 2);
 					assert.sameDeepMembers(stores.map(s => s.name), ['B', 'C']);
+				});
+			})
+			.finally(() => acl.unsecure(Store));
+	});
+
+	it('should secure model without row level filtering', () => {
+		const acl = nsec(s.ds, {getCurrentSubjects: () => 'tom'});
+		acl.secure(Store, {rowlevel: false});
+		return Store.find({where: {name: {inq: ['A', 'B', 'C']}}})
+			.then(([storeA, storeB, storeC]) => {
+				return PromiseA.resolve()
+					.then(() => acl.allow('jerry', storeA, ['read', 'manage']))
+					.then(() => acl.allow('tom', storeB, ['read']))
+					.then(() => acl.allow(['tom', 'jerry'], storeC, ['read']));
+			})
+			.then(() => {
+				return Store.find({where: {name: {inq: ['A', 'B', 'C']}}}).then(stores => {
+					assert.lengthOf(stores, 3);
+					assert.sameDeepMembers(stores.map(s => s.name), ['A', 'B', 'C']);
 				});
 			})
 			.finally(() => acl.unsecure(Store));
