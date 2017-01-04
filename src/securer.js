@@ -53,14 +53,14 @@ function secure(acl, Model, opts) {
 			ctx.options = _.defaults(ctx.options || {}, {secure: opts.secure});
 
 			debug('---');
-			debug('Securing %s:%s', modelName, operation);
-
 			const {query, options} = ctx;
 
-			if (options.secure === false) {
-				debug('{secure: false} or {rowlevel: false} - skipping secure');
+			if (opts.rowlevel === false || options.secure === false) {
+				debug('{secure: false} or {rowlevel: false} - skipping row level filter');
 				return next();
 			}
+
+			debug('Row level filtering %s:%s', modelName, operation);
 
 			const forceSecure = options.secure === true;
 
