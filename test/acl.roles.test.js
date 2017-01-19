@@ -126,7 +126,7 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A]) => {
 			return scoped.assignMembership('Tom', A).then(m => {
 				assert.isObject(m);
-				assert.deepEqual(_.omit(m.toJSON(), 'id'), {
+				assert.containSubset(m, {
 					roleId: A.id,
 					scope: 'Store',
 					scopeId: '123',
@@ -142,7 +142,7 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
 				assert.lengthOf(mappings, 3);
-				assert.sameDeepMembers(mappings.map(m => _.omit(m.toJSON(), 'id')), [
+				assert.containSubset(mappings, [
 					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
 					{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
 					{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'}
@@ -156,7 +156,7 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
 				assert.lengthOf(mappings, 3);
-				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
+				assert.containSubset(mappings, [
 					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
 					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
 					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
@@ -170,7 +170,7 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
 			return scoped.assignMemberships('Tom', [A, B, C], 'active').then(mappings => {
 				assert.lengthOf(mappings, 3);
-				assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
+				assert.containSubset(mappings, [
 					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
 					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
 					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'}
@@ -194,7 +194,7 @@ describe('acl/roles', () => {
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 2);
-					assert.sameDeepMembers(memberships, [
+					assert.containSubset(memberships, [
 						{roleId: A1.id, scope: 'Foo', scopeId: '1', userId: 'Tom', state: 'pending'},
 						{roleId: A2.id, scope: 'Bar', scopeId: '2', userId: 'Tom', state: 'pending'},
 					]);
@@ -229,7 +229,7 @@ describe('acl/roles', () => {
 				return scoped.unassignMemberships('Tom', A).then(info => {
 					assert.deepEqual(info, {count: 1});
 					return acl.models.SecMembership.find().then(mappings => {
-						assert.sameDeepMembers(mappings.map(m => _.omit(m.toObject(), 'id')), [
+						assert.containSubset(mappings, [
 							{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
 							{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'}
 						]);
@@ -248,7 +248,7 @@ describe('acl/roles', () => {
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 3);
-					assert.sameDeepMembers(memberships, [
+					assert.containSubset(memberships, [
 						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
 						{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
 						{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
@@ -266,7 +266,7 @@ describe('acl/roles', () => {
 				.then(memberships => {
 					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 3);
-					assert.sameDeepMembers(memberships, [
+					assert.containSubset(memberships, [
 						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
 						{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
 						{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}

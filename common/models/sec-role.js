@@ -4,6 +4,8 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 const shortid = require('shortid');
 const arrify = require('arrify');
+const timestampMixin = require('loopback-ds-timestamp-mixin/time-stamp');
+
 const utils = require('../../src/utils');
 
 /* eslint-disable */
@@ -16,6 +18,7 @@ function Role() {
 /* eslint-enable */
 
 module.exports = function (Role) {
+	timestampMixin(Role);
 	Role.definition.rawProperties.id.default =
 		Role.definition.properties.id.default = function () {
 			return shortid();

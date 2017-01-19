@@ -42,6 +42,7 @@
     "hoek": "^4.1.0",
     "joi": "^10.1.0",
     "lodash": "^4.17.4",
+    "loopback-ds-timestamp-mixin": "^3.4.0",
     "needs": "^1.0.3",
     "shortid": "^2.2.6"
   },
@@ -51,6 +52,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "chai-subset": "^1.4.0",
     "coveralls": "^2.11.15",
     "eslint": "^3.12.2",
     "eslint-config-airbnb": "^13.0.0",

@@ -1,6 +1,9 @@
 'use strict';
 
-require('chai').use(require('chai-as-promised'));
+require('chai')
+	.use(require('chai-as-promised'))
+	.use(require('chai-subset'));
+
 const _ = require('lodash');
 const path = require('path');
 const needs = require('needs');
