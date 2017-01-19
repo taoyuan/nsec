@@ -22,7 +22,7 @@ module.exports = function (Role) {
 		};
 
 	Role.prototype.resolveParents = function (parents) {
-		return Role.resolve(parents, p => p.id !== this.id);
+		return Role.resolve(parents, _.pick(this, ['scope', 'scopeId'])).filter(p => p.id !== this.id);
 	};
 
 	Role.prototype.resolveParentIds = function (parents) {
@@ -84,9 +84,7 @@ module.exports = function (Role) {
 			if (_.isObject(filter)) {
 				scope = filter.scope;
 				scopeId = filter.scopeId;
-				filter = (role => {
-					return (_.isUndefined(scope) ||role.scope === scope) && (_.isUndefined(scopeId) || role.scopeId === scopeId)
-				});
+				filter = role => (_.isUndefined(scope) || role.scope === scope) && (_.isUndefined(scopeId) || role.scopeId === scopeId);
 			} else {
 				filter = _.identity;
 			}
