@@ -1,5 +1,6 @@
 {
 	"name": "SecMembership",
+	"automaticValidation": false,
 	"properties": {
 		"id": {
 			"type": "string",

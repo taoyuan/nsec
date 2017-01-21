@@ -1,5 +1,6 @@
 {
 	"name": "SecRole",
+	"automaticValidation": false,
 	"properties": {
 		"id": {
 			"type": "string",

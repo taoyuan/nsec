@@ -12,6 +12,7 @@ module.exports = function (SecMembership) {
 		};
 
 	SecMembership.validatesUniquenessOf('userId', {scopedTo: ['roleId']});
+	SecMembership.validatesUniquenessOf('userId', {scopedTo: ['scope', 'scopeId']});
 
 	return SecMembership;
 };

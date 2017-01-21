@@ -1,5 +1,6 @@
 {
 	"name": "SecEntity",
+	"automaticValidation": false,
 	"properties": {
 		"entityType": "string",
 		"entityId": "string",
