@@ -139,13 +139,13 @@ describe('acl/roles', () => {
 
 	it('should assign memberships', () => {
 		const scoped = acl.scoped('Store:123');
-		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
+		return createInheritedRoles(scoped).then(([A]) => {
+			return scoped.assignMemberships(['Tom', 'Jerry', 'David'], A).then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.containSubset(mappings, [
 					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
-					{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
-					{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'}
+					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'Jerry', state: 'pending'},
+					{roleId: A.id, scope: 'Store', scopeId: '123', userId: 'David', state: 'pending'}
 				]);
 			});
 		});
@@ -153,13 +153,13 @@ describe('acl/roles', () => {
 
 	it('should assign memberships with null scope', () => {
 		const scoped = acl.scoped();
-		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C]).then(mappings => {
+		return createInheritedRoles(scoped).then(([A]) => {
+			return scoped.assignMemberships(['Tom', 'Jerry', 'David'], A).then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.containSubset(mappings, [
 					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
-					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
-					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Jerry', state: 'pending'},
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'David', state: 'pending'}
 				]);
 			});
 		});
@@ -167,13 +167,13 @@ describe('acl/roles', () => {
 
 	it('should assign membership with state active', () => {
 		const scoped = acl.scoped();
-		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C], 'active').then(mappings => {
+		return createInheritedRoles(scoped).then(([A]) => {
+			return scoped.assignMemberships(['Tom', 'Jerry', 'David'], A, 'active').then(mappings => {
 				assert.lengthOf(mappings, 3);
 				assert.containSubset(mappings, [
 					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
-					{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
-					{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'}
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'Jerry', state: 'active'},
+					{roleId: A.id, scope: null, scopeId: undefined, userId: 'David', state: 'active'}
 				]);
 			});
 		});
@@ -192,7 +192,6 @@ describe('acl/roles', () => {
 				scoped2.assignMemberships('Tom', A2),
 			]).then(() => acl.scoped('*').findMemberships({user: 'Tom'}))
 				.then(memberships => {
-					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
 					assert.lengthOf(memberships, 2);
 					assert.containSubset(memberships, [
 						{roleId: A1.id, scope: 'Foo', scopeId: '1', userId: 'Tom', state: 'pending'},
@@ -227,13 +226,13 @@ describe('acl/roles', () => {
 		return createInheritedRoles(scoped).then(([A, B]) => {
 			return Promise.each([
 				() => scoped.assignMembership('Tom', A).then(() => {
-					scoped.findMembership({user: 'Tom'}).then(membership => {
+					return scoped.findMembership({user: 'Tom'}).then(membership => {
 						assert.isObject(membership);
 						assert.equal(membership.roleId, A.id);
 					});
 				}),
 				() => scoped.assignMembership('Tom', B).then(() => {
-					scoped.findMembership({user: 'Tom'}).then(membership => {
+					return scoped.findMembership({user: 'Tom'}).then(membership => {
 						assert.isObject(membership);
 						assert.equal(membership.roleId, B.id);
 					});
@@ -245,14 +244,11 @@ describe('acl/roles', () => {
 	it('should unassign memberships', () => {
 		const scoped = acl.scoped('Store:123');
 		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C]).then(() => {
+			return scoped.assignMemberships('Tom', A).then(() => {
 				return scoped.unassignMemberships('Tom', A).then(info => {
 					assert.deepEqual(info, {count: 1});
 					return acl.models.SecMembership.find().then(mappings => {
-						assert.containSubset(mappings, [
-							{roleId: B.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'},
-							{roleId: C.id, scope: 'Store', scopeId: '123', userId: 'Tom', state: 'pending'}
-						]);
+						assert.lengthOf(mappings, 0);
 					});
 				});
 			});
@@ -261,35 +257,15 @@ describe('acl/roles', () => {
 
 	it('should update multiple memberships from state pending to active', () => {
 		const scoped = acl.scoped();
-		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C])
-				.then(() => scoped.updateMemberships({user: 'Tom', roles: [A, B]}, {state: 'active'}))
-				.then(() => scoped.findMemberships({user: 'Tom'}))
+		return createInheritedRoles(scoped).then(([A]) => {
+			return scoped.assignMemberships(['Tom', 'Jerry', 'David'], A)
+				.then(() => scoped.updateMemberships(['Tom', 'Jerry'], {state: 'active'}))
+				.then(() => scoped.findMemberships(['Tom', 'Jerry']))
 				.then(memberships => {
-					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
-					assert.lengthOf(memberships, 3);
+					assert.lengthOf(memberships, 2);
 					assert.containSubset(memberships, [
 						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
-						{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
-						{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
-					]);
-				});
-		});
-	});
-
-	it('should update one membership from state pending to active', () => {
-		const scoped = acl.scoped();
-		return createInheritedRoles(scoped).then(([A, B, C]) => {
-			return scoped.assignMemberships('Tom', [A, B, C])
-				.then(() => scoped.updateMembership({user: 'Tom', role: B}, {state: 'active'}))
-				.then(() => scoped.findMemberships({user: 'Tom'}))
-				.then(memberships => {
-					memberships = memberships.map(m => _.omit(m.toObject(), 'id'));
-					assert.lengthOf(memberships, 3);
-					assert.containSubset(memberships, [
-						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'},
-						{roleId: B.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'active'},
-						{roleId: C.id, scope: null, scopeId: undefined, userId: 'Tom', state: 'pending'}
+						{roleId: A.id, scope: null, scopeId: undefined, userId: 'Jerry', state: 'active'},
 					]);
 				});
 		});
@@ -304,22 +280,22 @@ describe('acl/roles', () => {
 			createInheritedRoles(X2),
 			createInheritedRoles(Y3)
 		]).then(([[X1A, X1B, X1C], [X2A, X2B, X2C], [Y3A, Y3B, Y3C]]) => {
-			return Promise.all([
-				X1.assignMemberships(['Tom', 'Jerry'], X1A),
-				X1.assignMemberships(['Tom', 'Dean', 'Sam'], X1B),
-				X1.assignMemberships(['Merlin'], X1C),
+			return Promise.each([
+				() => X1.assignMemberships(['Tom', 'Jerry'], X1A),
+				() => X1.assignMemberships(['Tom', 'Dean', 'Sam'], X1B),
+				() => X1.assignMemberships(['Merlin'], X1C),
 
-				X2.assignMemberships(['Tom', 'Jerry'], X2A),
-				X2.assignMemberships(['Tom', 'Dean', 'Sam'], X2B),
-				X2.assignMemberships(['Merlin'], X2C),
+				() => X2.assignMemberships(['Tom', 'Jerry'], X2A),
+				() => X2.assignMemberships(['Tom', 'Dean', 'Sam'], X2B),
+				() => X2.assignMemberships(['Merlin'], X2C),
 
-				Y3.assignMemberships(['Tom', 'Jerry'], Y3A),
-				Y3.assignMemberships(['Tom', 'Dean', 'Sam'], Y3B),
-				Y3.assignMemberships(['Merlin'], Y3C)
-			]).then(() => {
+				() => Y3.assignMemberships(['Tom', 'Jerry'], Y3A),
+				() => Y3.assignMemberships(['Tom', 'Dean', 'Sam'], Y3B),
+				() => Y3.assignMemberships(['Merlin'], Y3C)
+			], fn => fn()).then(() => {
 				return acl.scoped('X').findMemberships({user: 'Tom'}).then(mappings => {
-					assert.lengthOf(mappings, 4);
-					assert.sameDeepMembers(mappings.map(r => r.roleId), [X1A.id, X1B.id, X2A.id, X2B.id]);
+					assert.lengthOf(mappings, 2);
+					assert.sameDeepMembers(mappings.map(r => r.roleId), [X1B.id, X2B.id]);
 				});
 			});
 		});
@@ -332,22 +308,22 @@ describe('acl/roles', () => {
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
-			return Promise.all([
-				X.assignMemberships(['Tom', 'Jerry'], XA, 'active'),
-				X.assignMemberships(['Tom', 'Dean', 'Sam'], XB, 'active'),
-				X.assignMemberships(['Merlin'], XC, 'active'),
-				Y.assignMemberships(['Tom', 'Jerry'], YA, 'active'),
-				Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB, 'active'),
-				Y.assignMemberships(['Merlin'], YC, 'active')
-			]).then(() => {
+			return Promise.each([
+				() => X.assignMemberships(['Tom', 'Jerry'], XA, 'active'),
+				() => X.assignMemberships(['Tom', 'Dean', 'Sam'], XB, 'active'),
+				() => X.assignMemberships(['Merlin'], XC, 'active'),
+				() => Y.assignMemberships(['Tom', 'Jerry'], YA, 'active'),
+				() => Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB, 'active'),
+				() => Y.assignMemberships(['Merlin'], YC, 'active')
+			], fn => fn()).then(() => {
 				return X.findUserRoles('Tom').then(roles => {
-					assert.lengthOf(roles, 2);
-					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id]);
+					assert.lengthOf(roles, 1);
+					assert.sameDeepMembers(roles.map(r => r.id), [XB.id]);
 				});
 			}).then(() => {
 				return acl.scoped('*').findUserRoles('Tom').then(roles => {
-					assert.lengthOf(roles, 4);
-					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id, YA.id, YB.id]);
+					assert.lengthOf(roles, 2);
+					assert.sameDeepMembers(roles.map(r => r.id), [XB.id, YB.id]);
 				});
 			});
 		});
@@ -360,15 +336,15 @@ describe('acl/roles', () => {
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC, XD, XABC], [YA, YB, YC]]) => {
-			return Promise.all([
-				X.assignMemberships(['Tom', 'Jerry'], XA, 'active'),
-				X.assignMemberships(['Tom', 'Dean', 'Sam'], XB, 'active'),
-				X.assignMemberships(['Merlin'], XC, 'active'),
-				X.assignMemberships(['Merlin'], XABC, 'active'),
-				Y.assignMemberships(['Tom', 'Jerry'], YA, 'active'),
-				Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB, 'active'),
-				Y.assignMemberships(['Merlin'], YC, 'active')
-			]).then(() => {
+			return Promise.each([
+				() => X.assignMemberships(['Tom', 'Jerry'], XA, 'active'),
+				() => X.assignMemberships(['Tom', 'Dean', 'Sam'], XB, 'active'),
+				() => X.assignMemberships(['Merlin'], XC, 'active'),
+				() => X.assignMemberships(['Merlin'], XABC, 'active'),
+				() => Y.assignMemberships(['Tom', 'Jerry'], YA, 'active'),
+				() => Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB, 'active'),
+				() => Y.assignMemberships(['Merlin'], YC, 'active')
+			], fn => fn()).then(() => {
 				return X.findUserRoles('Merlin', true).then(roles => {
 					assert.lengthOf(roles, 4);
 					assert.sameDeepMembers(roles.map(r => r.id), [XA.id, XB.id, XC.id, XABC.id]);
@@ -384,14 +360,14 @@ describe('acl/roles', () => {
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
-			return Promise.all([
-				X.assignMemberships(['Tom', 'Jerry'], XA),
-				X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
-				X.assignMemberships(['Merlin'], XC),
-				Y.assignMemberships(['Tom', 'Jerry'], YA),
-				Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB),
-				Y.assignMemberships(['Merlin'], YC)
-			]).then(() => {
+			return Promise.each([
+				() => X.assignMemberships(['Tom', 'Jerry'], XA),
+				() => X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
+				() => X.assignMemberships(['Merlin'], XC),
+				() => Y.assignMemberships(['Tom', 'Jerry'], YA),
+				() => Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB),
+				() => Y.assignMemberships(['Merlin'], YC)
+			], fn => fn()).then(() => {
 				return X.findRoleUsers(XB).then(users => {
 					assert.lengthOf(users, 3);
 					assert.sameDeepMembers(users, ['Tom', 'Dean', 'Sam']);
@@ -422,19 +398,20 @@ describe('acl/roles', () => {
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
-			return Promise.all([
-				X.assignMemberships(['Tom', 'Jerry'], XA),
-				X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
-				X.assignMemberships(['Merlin'], XC),
-				Y.assignMemberships(['Tom', 'Jerry'], YA),
-				Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB),
-				Y.assignMemberships(['Merlin'], YC)
-			]).then(() => {
+			return Promise.each([
+				() => X.assignMemberships(['Tom', 'Jerry'], XA),
+				() => X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
+				() => X.assignMemberships(['Merlin'], XC),
+				() => Y.assignMemberships(['Tom', 'Jerry'], YA),
+				() => Y.assignMemberships(['Tom', 'Dean', 'Sam'], YB),
+				() => Y.assignMemberships(['Merlin'], YC)
+			], fn => fn()).then(() => {
 				return Promise.all([
+					X.hasRoles('Tom', [XB]),
 					X.hasRoles('Tom', [XA, XB]),
 					X.hasRoles('Tom', [XA, XB, XC])
 				]).then(answer => {
-					assert.deepEqual(answer, [true, false]);
+					assert.deepEqual(answer, [true, false, false]);
 				});
 			});
 		});
@@ -447,19 +424,20 @@ describe('acl/roles', () => {
 			createInheritedRoles(X),
 			createInheritedRoles(Y)
 		]).then(([[XA, XB, XC], [YA, YB, YC]]) => {
-			return Promise.all([
-				X.assignMemberships(['Tom', 'Jerry'], XA),
-				X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
-				X.assignMemberships(['Merlin'], XC),
-				Y.assignMemberships(['Tom', 'Jerry'], YA),
-				Y.assignMemberships(['Dean', 'Sam'], YB),
-				Y.assignMemberships(['Merlin'], YC)
-			]).then(() => {
+			return Promise.each([
+				() => X.assignMemberships(['Tom', 'Jerry'], XA),
+				() => X.assignMemberships(['Tom', 'Dean', 'Sam'], XB),
+				() => X.assignMemberships(['Merlin'], XC),
+				() => Y.assignMemberships(['Tom', 'Jerry'], YA),
+				() => Y.assignMemberships(['Dean', 'Sam'], YB),
+				() => Y.assignMemberships(['Merlin'], YC)
+			], fn => fn()).then(() => {
 				return Promise.all([
+					X.hasRoles('Tom', ['B']),
 					X.hasRoles('Tom', ['A', 'B']),
 					X.hasRoles('Tom', ['A', 'B', 'C'])
 				]).then(answer => {
-					assert.deepEqual(answer, [true, false]);
+					assert.deepEqual(answer, [true, false, false]);
 				});
 			});
 		});

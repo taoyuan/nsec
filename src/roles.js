@@ -239,35 +239,38 @@ class Roles {
 	 * Assign roles to users
 	 *
 	 * @param {String|[String]} users
-	 * @param {SecRole|String|[SecRole]|[String]} roles
+	 * @param {SecRole|String} role
 	 * @param {String} [state] state `pending` or `active`
 	 * @return {Promise.<[SecMembership]>}
 	 */
-	assignMemberships(users, roles, state) {
-		const proles = this.resolveRoles(roles);
+	assignMemberships(users, role, state) {
+		const roles = this.resolveRoles(role);
 		users = arrify(users).map(u => unwrap(u)).filter(_.identity);
 
 		const {SecMembership} = this.acl.models;
 
 		// resolve and filter roles according scope
 		// noinspection JSValidateTypes
-		return PromiseA.all([proles, users]).then(([roles, users]) => {
+		return PromiseA.all([roles, users]).then(([roles, users]) => {
 			if (_.isEmpty(roles) || _.isEmpty(users)) return PromiseA.resolve([]);
 
-			const items = _.flatten(_.map(roles, role => _.map(users, userId => ({
+			role = roles[0];
+
+			const items = _.map(users, userId => ({
 				userId,
 				roleId: role.id,
 				scope: role.scope,
 				scopeId: role.scopeId,
 				state
-			}))));
+			}));
 
 			if (_.isEmpty(items)) {
 				return PromiseA.resolve([]);
 			}
 
 			return PromiseA.mapSeries(items, data => {
-				return SecMembership.findOrCreate(_.pick(data, ['userId', 'scope', 'scopeId']), data).then(([inst, created]) => {
+				const where = _.pick(data, ['userId', 'scope', 'scopeId']);
+				return SecMembership.findOrCreate({where}, data).then(([inst, created]) => {
 					return created ? inst : inst.updateAttributes(data);
 				});
 			});
