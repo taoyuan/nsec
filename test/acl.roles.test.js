@@ -179,7 +179,7 @@ describe('acl/roles', () => {
 		});
 	});
 
-	it('should assign multiple memberships for same user different scopes', () => {
+	it('should assign multiple memberships for same user in different scopes', () => {
 		const scoped1 = acl.scoped('Foo:1');
 		const scoped2 = acl.scoped('Bar:2');
 
@@ -198,6 +198,26 @@ describe('acl/roles', () => {
 						{roleId: A1.id, scope: 'Foo', scopeId: '1', userId: 'Tom', state: 'pending'},
 						{roleId: A2.id, scope: 'Bar', scopeId: '2', userId: 'Tom', state: 'pending'},
 					]);
+				});
+		});
+	});
+
+	it('should contain only one membership for same user and same scope', () => {
+		const scoped = acl.scoped('Foo:1');
+		return createInheritedRoles(scoped).then(([A, B, C]) => {
+			return Promise.all([
+				scoped.assignMemberships('Tom', A, 'A'),
+				scoped.assignMemberships('Tom', B, 'B'),
+				scoped.assignMemberships('Tom', C, 'C'),
+			]).then(() => acl.scoped('*').findMemberships({user: 'Tom'}))
+				.then(memberships => {
+					assert.lengthOf(memberships, 1);
+					assert.containSubset(memberships[0], {
+						userId: 'Tom',
+						scope: 'Foo',
+						scopeId: '1'
+					});
+					assert.notEqual(memberships[0].state, 'A');
 				});
 		});
 	});

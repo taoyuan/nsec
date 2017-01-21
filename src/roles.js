@@ -266,7 +266,11 @@ class Roles {
 				return PromiseA.resolve([]);
 			}
 
-			return PromiseA.map(items, item => SecMembership.upsertWithWhere(_.pick(item, ['userId', 'scope', 'scopeId']), item));
+			return PromiseA.mapSeries(items, data => {
+				return SecMembership.findOrCreate(_.pick(data, ['userId', 'scope', 'scopeId']), data).then(([inst, created]) => {
+					return created ? inst : inst.updateAttributes(data);
+				});
+			});
 		});
 	}
 
