@@ -14,7 +14,7 @@ const DataSource = require('loopback-datasource-juggler').DataSource;
 const ds = exports.ds = new DataSource('mongodb', {
 	database: '__test__' + pkg.name,
 	strictObjectIDCoercion: true,
-	enableOptimisedfindOrCreate: true
+	enableOptimizedFindOrCreate: true
 });
 require('./mocks/models/user')(ds);
 require('./mocks/models/store')(ds);
