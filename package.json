@@ -40,30 +40,30 @@
     "bluebird": "^3.4.7",
     "debug": "^2.6.0",
     "hoek": "^4.1.0",
-    "joi": "^10.1.0",
+    "joi": "^10.2.0",
     "lodash": "^4.17.4",
     "loopback-ds-timestamp-mixin": "^3.4.0",
     "needs": "^1.0.3",
     "shortid": "^2.2.6"
   },
   "optionalDependencies": {
-    "loopback-datasource-juggler": "^3.1.1"
+    "loopback-datasource-juggler": "^3.2.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "chai-subset": "^1.4.0",
     "coveralls": "^2.11.15",
-    "eslint": "^3.12.2",
-    "eslint-config-airbnb": "^13.0.0",
+    "eslint": "^3.14.0",
+    "eslint-config-airbnb": "^14.0.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^3.0.2",
     "eslint-plugin-mocha": "^4.8.0",
-    "eslint-plugin-react": "^6.8.0",
-    "loopback-connector-mongodb": "^1.17.0",
+    "eslint-plugin-react": "^6.9.0",
+    "loopback-connector-mongodb": "^3.0.0",
     "mocha": "^3.2.0",
     "needs": "^1.0.3",
-    "nyc": "^10.0.0",
+    "nyc": "^10.1.2",
     "sinon": "^1.17.7",
     "sinon-chai": "^2.8.0",
     "xo": "^0.17.1"
