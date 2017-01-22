@@ -11,7 +11,6 @@ module.exports = function (SecMembership) {
 			return shortid();
 		};
 
-	SecMembership.validatesUniquenessOf('userId', {scopedTo: ['roleId']});
 	SecMembership.validatesUniquenessOf('userId', {scopedTo: ['scope', 'scopeId']});
 
 	return SecMembership;
